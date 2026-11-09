@@ -229,7 +229,7 @@ function smooth(p){
 
 // ---- 3D glasses (units = canonical face centimetres) ----
 let THREE=null,glr=null,scene=null,cam=null,root=null,rig=null,rigFor=null;
-const FACE_W=15.33,WG=FACE_W*1.0,GY=2.3,GZ=6.0,BEND=.012;
+const FACE_W=15.33,WG=FACE_W*1.0,GY=2.3,GZ=6.0,BEND=.012,TUCK=2.4;
 async function loadThree(){
   if(THREE)return THREE;
   try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js')}catch(e){console.log('THREEFAIL',e&&e.message);THREE=null}
@@ -248,9 +248,11 @@ function buildRig(f){
   const front=new THREE.Mesh(fg,mat(f.cv));front.renderOrder=3;g.add(front);
   if(f.sv){
     const aw=WG*f.sv.width/f.cv.width,ah=WG*f.sv.height/f.cv.width;
-    const ag=new THREE.PlaneGeometry(aw,ah);
     const am=mat(f.sv);
     for(const sx of [1,-1]){
+      // the arm tucks inward toward the head over its last part, so its tip goes in behind the ear
+      const ag=new THREE.PlaneGeometry(aw,ah,60,1);const ap=ag.attributes.position;
+      for(let i=0;i<ap.count;i++){const u=(ap.getX(i)+aw/2)/aw;let t=Math.max(0,Math.min(1,(u-.74)/.26));t=t*t*(3-2*t);ap.setZ(i,-sx*TUCK*t)}
       const a=new THREE.Mesh(ag,am);a.rotation.y=Math.PI/2;
       a.position.set(sx*(WG/2-.3),fh/2-ah/2,-.25-aw/2);a.renderOrder=2;g.add(a);
     }
