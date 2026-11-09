@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Virtual Try-On</title>
+<style>
+:root{--bg:#F4EFE8;--ink:#111;--muted:#6b645a;--gold:#B89554;--card:#fff;--line:#DACDA9}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 28px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(26px,4vw,38px);margin:0 0 6px;letter-spacing:.01em}
+.sub{color:var(--muted);margin:0 0 18px;font-size:15px;line-height:1.5}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.stage{position:relative;background:#e8e0d3;border:1px solid var(--line);aspect-ratio:4/3;overflow:hidden;display:flex;align-items:center;justify-content:center}
+canvas{width:100%;height:100%;object-fit:contain;display:block}
+.hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--muted);font-size:15px;line-height:1.5}
+.hint b{font-family:Georgia,serif;font-weight:400;font-size:22px;color:var(--ink)}
+.badge{position:absolute;bottom:10px;inset-inline:10px;background:rgba(17,17,17,.78);color:#fff;font-size:13px;padding:6px 10px;text-align:center}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+button,.btn{font:inherit;font-size:14px;letter-spacing:.04em;padding:12px 18px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.ghost,.btn.ghost{background:transparent;color:var(--ink)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#111}
+button:focus-visible,.btn:focus-visible,.item:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.priv{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.5}
+.panel h2{font-family:Georgia,serif;font-weight:400;font-size:20px;margin:0 0 12px}
+.list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.item{background:var(--card);border:1px solid var(--line);padding:6px 6px 8px;cursor:pointer;text-align:center;font:inherit;color:inherit;letter-spacing:0}
+.item[aria-pressed=true]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.item canvas{height:54px;width:100%;object-fit:contain}
+.item span{display:block;font-size:11.5px;margin-top:4px;line-height:1.3}
+.item small{display:block;color:var(--muted);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.now{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.now .nm{font-family:Georgia,serif;font-size:20px}
+.now .br{color:var(--muted);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+[hidden]{display:none!important}
+</style></head>
+<body>
+<div class="wrap" id="app">
+  <h1 id="t_title"></h1>
+  <p class="sub" id="t_sub"></p>
+  <div class="grid">
+    <div>
+      <div class="stage" id="stage">
+        <canvas id="cv" width="960" height="720"></canvas>
+        <div class="hint" id="hint"></div>
+        <div class="badge" id="badge" hidden></div>
+      </div>
+      <div class="row">
+        <button id="bCam"></button>
+        <button class="ghost" id="bPhoto"></button>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+      <p class="priv" id="t_priv"></p>
+    </div>
+    <div class="panel">
+      <h2 id="t_pick"></h2>
+      <div class="list" id="list"></div>
+      <div class="now" id="now">
+        <div class="br" id="nowBrand"></div>
+        <div class="nm" id="nowName"></div>
+        <div class="row">
+          <a class="btn gold" id="aWa" target="_blank" rel="noopener"></a>
+          <a class="btn ghost" id="aView" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+const WA='201110255528', SITE='https://www.luxury-optics.com';
+const IMG='https://cdn.ososs.com/public/upload/companies/5307/products/';
+const FR=[
+ ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd'],
+ ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd'],
+ ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd'],
+ ['Gucci','GG2050S','gg2050s-3435432','889652626253-cat-xl_c_ffffff-fffffd-66666b'],
+ ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d'],
+ ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd'],
+ ['Maui Jim','MJ0668S','mj0668s-3435379','603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b'],
+ ['Maui Jim','MJ0674S','mj0674s-3435380','603429080075-cat-xl_c_ffffff-fffffd-666666'],
+ ['Maui Jim','MJ0675S','mj0675s-3435381','603429080129-cat-xl_c_ffffff-fffffd-806a56'],
+ ['Maui Jim','MJ0728S','mj0728s-3435384','603429036539-cat-xl_c_ffffff-fffffd-806a56'],
+ ['Maui Jim','MJ0695S','mj0695s-3435382','603429082055-cat-xl_c_ffffff-626262-7f7f7f'],
+ ['Maui Jim','MJ0886S','mj0886s-3435385','603429072414-cat-xl_c_ffffff-fffffd-806d56'],
+ ['Maui Jim','MJ0421S','mj0421s-3435371','603429015527-cat-xl_c_ffffff-fffffd-fdffff'],
+ ['Maui Jim','MJ0655SA','mj0655sa-3435376','603429075767-cat-xl_c_ffffff-262626-fefefe']
+].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],ready:null,cv:null}));
+
+let lang='en';
+try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}
+if(lang!=='ar')lang='en';
+const T={
+ en:{title:'Try them on',sub:'Pick a frame and see it on your own face, live.',cam:'Start camera',photo:'Use a photo',priv:'Your camera stays on your device. Nothing is recorded or uploaded.',pick:'Our frames',
+  h1:'See how they look on you',h2:'Allow the camera, or upload a photo of your face.',loading:'Loading face tracker…',noface:'Face the camera and keep your face in view',
+  wa:'Ask on WhatsApp',view:'View frame',camfail:'We could not open the camera. You can upload a photo instead.',stop:'Stop camera',msg:(n,u)=>`Hello, I tried on ${n} and would like to ask about it: ${u}`,pre:'Preparing frames…'},
+ ar:{title:'جرّب النظارة',sub:'اختر الإطار وشوفه على وجهك مباشرة.',cam:'شغّل الكاميرا',photo:'استخدم صورة',priv:'الكاميرا تبقى على جهازك. لا يتم تسجيل أو رفع أي شيء.',pick:'نظاراتنا',
+  h1:'شوف كيف تبدو عليك',h2:'اسمح بالكاميرا، أو ارفع صورة لوجهك.',loading:'جاري تحميل متتبع الوجه…',noface:'وجّه وجهك نحو الكاميرا',
+  wa:'اسأل عبر واتساب',view:'عرض المنتج',camfail:'ما قدرنا نفتح الكاميرا. تقدر ترفع صورة بدلاً منها.',stop:'أوقف الكاميرا',msg:(n,u)=>`مرحباً، جربت النظارة ${n} وحابب أستفسر عنها: ${u}`,pre:'جاري تجهيز الإطارات…'}
+}[lang];
+document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+const $=id=>document.getElementById(id);
+$('t_title').textContent=T.title;$('t_sub').textContent=T.sub;$('t_priv').textContent=T.priv;$('t_pick').textContent=T.pick;
+$('bCam').textContent=T.cam;$('bPhoto').textContent=T.photo;
+const hint=$('hint'),badge=$('badge'),cv=$('cv'),ctx=cv.getContext('2d');
+function showHint(h,p){hint.hidden=false;hint.innerHTML='';if(h){const b=document.createElement('b');b.textContent=h;hint.appendChild(b)}if(p){const s=document.createElement('div');s.textContent=p;hint.appendChild(s)}}
+function spinHint(t){showHint('',t);const s=document.createElement('div');s.className='spin';hint.prepend(s)}
+showHint(T.h1,T.h2);
+
+// ---- cut the white background out of a product photo ----
+function load(src){return new Promise((res,rej)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+async function prep(f){
+  if(f.ready)return f.ready;
+  f.ready=(async()=>{
+    const im=await load(IMG+f.file+'.webp');
+    const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
+    const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
+    const d=x.getImageData(0,0,w,h),p=d.data;let x0=w,y0=h,x1=0,y1=0;
+    for(let i=0;i<p.length;i+=4){
+      const m=Math.min(p[i],p[i+1],p[i+2]);let a;
+      if(m>=236)a=0;else if(m<=186)a=255;else a=(236-m)/50*255;
+      if(a>0&&a<255){const k=255*(1-a/255)/(a/255);for(let j=0;j<3;j++){p[i+j]=Math.max(0,Math.min(255,(p[i+j]-255*(1-a/255))/(a/255)))}}
+      p[i+3]=a;
+      if(a>40){const q=i/4,px=q%w,py=(q/w)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py}
+    }
+    x.putImageData(d,0,0);
+    const bw=x1-x0+1,bh=y1-y0+1,o=document.createElement('canvas');o.width=bw;o.height=bh;
+    o.getContext('2d').drawImage(c,x0,y0,bw,bh,0,0,bw,bh);
+    f.cv=o;return o;
+  })();
+  return f.ready;
+}
+
+// ---- list ----
+let cur=0;const listEl=$('list');
+FR.forEach((f,i)=>{
+  const b=document.createElement('button');b.className='item';b.type='button';b.setAttribute('aria-pressed',i===0);
+  const c=document.createElement('canvas');c.width=160;c.height=80;b.appendChild(c);
+  const s=document.createElement('span');const sm=document.createElement('small');sm.textContent=f.brand;s.appendChild(sm);s.appendChild(document.createTextNode(f.name));b.appendChild(s);
+  b.onclick=()=>select(i);listEl.appendChild(b);f.btn=b;f.thumb=c;
+  prep(f).then(o=>{const g=c.getContext('2d');const r=Math.min(160/o.width,80/o.height);const w=o.width*r,h=o.height*r;g.drawImage(o,(160-w)/2,(80-h)/2,w,h);if(i===cur)redraw()}).catch(()=>{c.style.opacity=.2});
+});
+function select(i){
+  cur=i;FR.forEach((f,j)=>f.btn.setAttribute('aria-pressed',j===i));
+  const f=FR[i];$('nowBrand').textContent=f.brand;$('nowName').textContent=f.name;
+  const url=SITE+(lang==='ar'?'':'/en')+'/products/'+f.slug;
+  $('aWa').textContent=T.wa;$('aWa').href='https://wa.me/'+WA+'?text='+encodeURIComponent(T.msg(f.brand+' '+f.name,url));
+  $('aView').textContent=T.view;$('aView').href=url;
+  prep(f).then(()=>redraw());
+}
+select(0);
+
+// ---- face tracking ----
+let lmk=null,loading=null,mode='none',stream=null,video=null,lastFace=null,raf=0,photoImg=null,sm=null;
+async function tracker(){
+  if(lmk)return lmk;
+  if(loading)return loading;
+  loading=(async()=>{
+    const base='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+    const M=await import(base+'/vision_bundle.mjs');
+    const fs=await M.FilesetResolver.forVisionTasks(base+'/wasm');
+    const model='https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+    try{lmk=await M.FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:model,delegate:'GPU'},runningMode:'IMAGE',numFaces:1})}
+    catch(e){lmk=await M.FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:model,delegate:'CPU'},runningMode:'IMAGE',numFaces:1})}
+    return lmk;
+  })();
+  return loading;
+}
+function pose(l,W,H,mir){
+  const P=i=>({x:(mir?1-l[i].x:l[i].x)*W,y:l[i].y*H});
+  const a=P(33),b=P(263),e=P(234),g=P(454),n=P(1);
+  const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
+  const fw=Math.hypot(g.x-e.x,g.y-e.y);
+  let roll=Math.atan2(b.y-a.y,b.x-a.x);if(Math.abs(roll)>Math.PI/2)roll+=Math.PI;
+  const dl=Math.hypot(n.x-e.x,n.y-e.y),dr=Math.hypot(g.x-n.x,g.y-n.y);
+  const r=Math.max(-1,Math.min(1,(dl-dr)/(dl+dr)*1.5));
+  const sx=Math.max(.6,Math.cos(Math.asin(r)));
+  return {cx,cy,w:fw,roll,sx};
+}
+function smooth(p){
+  if(!sm){sm={...p};return sm}
+  const k=.55;for(const q in p)sm[q]=sm[q]+(p[q]-sm[q])*k;return sm;
+}
+function drawGlasses(p){
+  const f=FR[cur];if(!f.cv)return;
+  const w=p.w*1.02,h=w*f.cv.height/f.cv.width;
+  ctx.save();ctx.translate(p.cx,p.cy+p.w*.015);ctx.rotate(p.roll);ctx.scale(p.sx,1);
+  ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=w*.02;ctx.shadowOffsetY=w*.012;
+  ctx.drawImage(f.cv,-w/2,-h/2,w,h);ctx.restore();
+}
+function redraw(){
+  if(mode==='photo'&&photoImg){ctx.clearRect(0,0,cv.width,cv.height);ctx.drawImage(photoImg,0,0,cv.width,cv.height);if(lastFace){drawGlasses(lastFace);badge.hidden=true}else{badge.textContent=T.noface;badge.hidden=false}}
+}
+function setMode(m){mode=m;if(m!=='cam'&&stream){stream.getTracks().forEach(t=>t.stop());stream=null;cancelAnimationFrame(raf)}$('bCam').textContent=m==='cam'?T.stop:T.cam}
+
+$('bCam').onclick=async()=>{
+  if(mode==='cam'){setMode('none');showHint(T.h1,T.h2);return}
+  spinHint(T.loading);
+  try{
+    const [L]=await Promise.all([tracker(),navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false}).then(s=>stream=s)]);
+    video=document.createElement('video');video.playsInline=true;video.muted=true;video.srcObject=stream;await video.play();
+    await L.setOptions({runningMode:'VIDEO'});
+    cv.width=video.videoWidth||960;cv.height=video.videoHeight||720;setMode('cam');sm=null;lastFace=null;hint.hidden=true;
+    let lastT=-1,miss=0;
+    const loop=()=>{
+      if(mode!=='cam')return;
+      const t=performance.now();
+      if(video.readyState>=2&&t!==lastT){
+        lastT=t;ctx.save();ctx.translate(cv.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,cv.width,cv.height);ctx.restore();
+        const r=L.detectForVideo(video,t);
+        if(r.faceLandmarks&&r.faceLandmarks[0]){miss=0;lastFace=smooth(pose(r.faceLandmarks[0],cv.width,cv.height,true));badge.hidden=true}
+        else if(++miss>12){lastFace=null;sm=null;badge.textContent=T.noface;badge.hidden=false}
+        if(lastFace)drawGlasses(lastFace);
+      }
+      raf=requestAnimationFrame(loop);
+    };
+    loop();
+  }catch(e){setMode('none');showHint(T.h1,T.camfail)}
+};
+$('bPhoto').onclick=()=>$('file').click();
+$('file').onchange=async ev=>{
+  const f=ev.target.files[0];if(!f)return;
+  setMode('photo');spinHint(T.loading);
+  try{
+    const L=await tracker();await L.setOptions({runningMode:'IMAGE'});
+    const url=URL.createObjectURL(f);const im=await load(url);
+    const sc=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight));cv.width=Math.round(im.naturalWidth*sc);cv.height=Math.round(im.naturalHeight*sc);
+    photoImg=im;hint.hidden=true;
+    const r=L.detect(im);
+    lastFace=(r.faceLandmarks&&r.faceLandmarks[0])?pose(r.faceLandmarks[0],cv.width,cv.height,false):null;
+    redraw();
+  }catch(e){showHint(T.h1,T.camfail)}
+  ev.target.value='';
+};
+window.__tryon={FR,select,get face(){return lastFace}};
+</script>
+</body></html>
