@@ -89,7 +89,9 @@ const FR=[
 ].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,side:a[5]||null,ready:null,cv:null,sv:null}));
 
 let lang='en';
-try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}
+const ql=(new URLSearchParams(location.search).get('lang')||'').slice(0,2);
+if(ql==='ar'||ql==='en')lang=ql;
+else{try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}}
 if(lang!=='ar')lang='en';
 const T={
  en:{title:'Try them on',sub:'Pick a frame and see it on your own face, live.',cam:'Start camera',photo:'Use a photo',priv:'Your camera stays on your device. Nothing is recorded or uploaded.',pick:'Our frames',
