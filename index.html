@@ -74,7 +74,7 @@ const IMG='https://cdn.ososs.com/public/upload/companies/5307/products/';
 const FR=[
  ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd'],
  ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd'],
- ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd'],
+ ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front.png'],
  ['Gucci','GG2050S','gg2050s-3435432','889652626253-cat-xl_c_ffffff-fffffd-66666b'],
  ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d'],
  ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd'],
@@ -86,7 +86,7 @@ const FR=[
  ['Maui Jim','MJ0886S','mj0886s-3435385','603429072414-cat-xl_c_ffffff-fffffd-806d56'],
  ['Maui Jim','MJ0421S','mj0421s-3435371','603429015527-cat-xl_c_ffffff-fffffd-fdffff'],
  ['Maui Jim','MJ0655SA','mj0655sa-3435376','603429075767-cat-xl_c_ffffff-262626-fefefe']
-].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],ready:null,cv:null}));
+].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,ready:null,cv:null}));
 
 let lang='en';
 try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}
@@ -113,6 +113,7 @@ function load(src){return new Promise((res,rej)=>{const i=new Image();i.crossOri
 async function prep(f){
   if(f.ready)return f.ready;
   f.ready=(async()=>{
+    if(f.url){const pim=await load(f.url);const pc=document.createElement('canvas');pc.width=pim.naturalWidth;pc.height=pim.naturalHeight;pc.getContext('2d').drawImage(pim,0,0);f.cv=pc;return pc}
     const im=await load(IMG+f.file+'.webp');
     const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
     const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
