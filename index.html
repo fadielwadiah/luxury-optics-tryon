@@ -74,7 +74,7 @@ const IMG='https://cdn.ososs.com/public/upload/companies/5307/products/';
 const FR=[
  ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd'],
  ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd'],
- ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front.png'],
+ ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front-v2.png','gg2152s-side.png'],
  ['Gucci','GG2050S','gg2050s-3435432','889652626253-cat-xl_c_ffffff-fffffd-66666b'],
  ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d'],
  ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd'],
@@ -86,7 +86,7 @@ const FR=[
  ['Maui Jim','MJ0886S','mj0886s-3435385','603429072414-cat-xl_c_ffffff-fffffd-806d56'],
  ['Maui Jim','MJ0421S','mj0421s-3435371','603429015527-cat-xl_c_ffffff-fffffd-fdffff'],
  ['Maui Jim','MJ0655SA','mj0655sa-3435376','603429075767-cat-xl_c_ffffff-262626-fefefe']
-].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,ready:null,cv:null}));
+].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,side:a[5]||null,ready:null,cv:null,sv:null}));
 
 let lang='en';
 try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}
@@ -113,7 +113,7 @@ function load(src){return new Promise((res,rej)=>{const i=new Image();i.crossOri
 async function prep(f){
   if(f.ready)return f.ready;
   f.ready=(async()=>{
-    if(f.url){const pim=await load(f.url);const pc=document.createElement('canvas');pc.width=pim.naturalWidth;pc.height=pim.naturalHeight;pc.getContext('2d').drawImage(pim,0,0);f.cv=pc;return pc}
+    if(f.url){const pim=await load(f.url);const pc=document.createElement('canvas');pc.width=pim.naturalWidth;pc.height=pim.naturalHeight;pc.getContext('2d').drawImage(pim,0,0);f.cv=pc;if(f.side){const sim=await load(f.side);const sc=document.createElement('canvas');sc.width=sim.naturalWidth;sc.height=sim.naturalHeight;sc.getContext('2d').drawImage(sim,0,0);f.sv=sc}return pc}
     const im=await load(IMG+f.file+'.webp');
     const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
     const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
@@ -153,7 +153,7 @@ function select(i){
 select(0);
 
 // ---- face tracking ----
-let lmk=null,loading=null,mode='none',stream=null,video=null,lastFace=null,raf=0,photoImg=null,sm=null;
+let lmk=null,loading=null,mode='none',stream=null,video=null,lastFace=null,raf=0,photoImg=null;
 async function tracker(){
   if(lmk)return lmk;
   if(loading)return loading;
@@ -168,7 +168,36 @@ async function tracker(){
   })();
   return loading;
 }
-function pose(l,W,H,mir){
+// Head pose from face-mesh landmarks (rigid fit to canonical face), in display space.
+// Output frame: X right, Y up, Z toward viewer. Units: pixels.
+const CAN={"33":[-4.446,2.664,3.173],"133":[-1.856,2.585,3.758],"362":[1.856,2.585,3.758],"263":[4.446,2.664,3.173],"168":[0,3.271,5.236],"6":[0,2.473,5.789],"1":[0,-1.127,7.476],"4":[0,-0.463,7.587],"234":[-7.664,0.673,-2.436],"454":[7.664,0.673,-2.436],"152":[0,-9.403,4.264],"10":[0,8.262,4.482],"61":[-2.456,-4.343,4.284],"291":[2.456,-4.343,4.284],"129":[-1.786,-0.978,4.85],"358":[1.786,-0.978,4.85],"205":[-3.833,-1.537,4.138],"425":[3.833,-1.537,4.138],"127":[-7.743,2.365,-2.005],"356":[7.743,2.365,-2.005]};
+const IDS=Object.keys(CAN).map(Number);
+function inv3(m){const[a,b,c,d,e,f,g,h,i]=m;const A=e*i-f*h,B=-(d*i-f*g),C=d*h-e*g;const det=a*A+b*B+c*C;if(Math.abs(det)<1e-12)return null;const k=1/det;
+ return[A*k,-(b*i-c*h)*k,(b*f-c*e)*k,B*k,(a*i-c*g)*k,-(a*f-c*d)*k,C*k,-(a*h-b*g)*k,(a*e-b*d)*k]}
+function tr3(m){return[m[0],m[3],m[6],m[1],m[4],m[7],m[2],m[5],m[8]]}
+function polar(M){let R=M.slice();for(let k=0;k<30;k++){const iv=inv3(R);if(!iv)return null;const it=tr3(iv);const N=R.map((v,i)=>.5*(v+it[i]));let dlt=0;for(let i=0;i<9;i++)dlt+=Math.abs(N[i]-R[i]);R=N;if(dlt<1e-9)break}return R}
+// l: landmarks (normalized), W,H: canvas size, mir: display is mirrored
+function fitPose(l,W,H,mir){
+  const Q=[],P=[];
+  for(const i of IDS){const c=CAN[i];Q.push([mir?-c[0]:c[0],c[1],c[2]]);const p=l[i];P.push([(mir?1-p.x:p.x)*W,-p.y*H,-p.z*W])}
+  const n=IDS.length;const mq=[0,0,0],mp=[0,0,0];
+  for(let i=0;i<n;i++)for(let k=0;k<3;k++){mq[k]+=Q[i][k]/n;mp[k]+=P[i][k]/n}
+  const M=new Array(9).fill(0);let qq=0;
+  for(let i=0;i<n;i++){const q=[Q[i][0]-mq[0],Q[i][1]-mq[1],Q[i][2]-mq[2]],p=[P[i][0]-mp[0],P[i][1]-mp[1],P[i][2]-mp[2]];
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++)M[r*3+c]+=p[r]*q[c];qq+=q[0]*q[0]+q[1]*q[1]+q[2]*q[2]}
+  const R=polar(M);if(!R)return null;
+  if(R[0]*(R[4]*R[8]-R[5]*R[7])-R[1]*(R[3]*R[8]-R[5]*R[6])+R[2]*(R[3]*R[7]-R[4]*R[6])<0)return null;
+  let s=0;for(let r=0;r<3;r++)for(let c=0;c<3;c++)s+=R[r*3+c]*M[r*3+c];s/=qq;
+  // translation: p = s R q + t
+  const t=[0,0,0];for(let r=0;r<3;r++)t[r]=mp[r]-s*(R[r*3]*mq[0]+R[r*3+1]*mq[1]+R[r*3+2]*mq[2]);
+  return {R,s,t};
+}
+function toEuler(R){ // yaw about Y, pitch about X, roll about Z (degrees) – for logging
+  const yaw=Math.atan2(R[2],R[8]),pitch=Math.asin(-Math.max(-1,Math.min(1,R[5]))),roll=Math.atan2(R[3],R[4]);
+  return [yaw,pitch,roll].map(v=>+(v*180/Math.PI).toFixed(1));
+}
+
+function pose2d(l,W,H,mir){
   const P=i=>({x:(mir?1-l[i].x:l[i].x)*W,y:l[i].y*H});
   const a=P(33),b=P(263),e=P(234),g=P(454),n=P(1);
   const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
@@ -179,14 +208,84 @@ function pose(l,W,H,mir){
   const sx=Math.max(.6,Math.cos(Math.asin(r)));
   return {cx,cy,w:fw,roll,sx};
 }
+function pose(l,W,H,mir){let f=null;try{f=fitPose(l,W,H,mir)}catch(e){}return {f,p2:pose2d(l,W,H,mir)}}
+function m2q(R){const t=R[0]+R[4]+R[8];let x,y,z,w;
+  if(t>0){const s=Math.sqrt(t+1)*2;w=s/4;x=(R[7]-R[5])/s;y=(R[2]-R[6])/s;z=(R[3]-R[1])/s}
+  else if(R[0]>R[4]&&R[0]>R[8]){const s=Math.sqrt(1+R[0]-R[4]-R[8])*2;w=(R[7]-R[5])/s;x=s/4;y=(R[1]+R[3])/s;z=(R[2]+R[6])/s}
+  else if(R[4]>R[8]){const s=Math.sqrt(1+R[4]-R[0]-R[8])*2;w=(R[2]-R[6])/s;x=(R[1]+R[3])/s;y=s/4;z=(R[5]+R[7])/s}
+  else{const s=Math.sqrt(1+R[8]-R[0]-R[4])*2;w=(R[3]-R[1])/s;x=(R[2]+R[6])/s;y=(R[5]+R[7])/s;z=s/4}
+  return [x,y,z,w]}
+function slerp(a,b,k){let d=a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3];const bb=b.slice();if(d<0){d=-d;for(let i=0;i<4;i++)bb[i]=-bb[i]}
+  const o=a.map((v,i)=>v+(bb[i]-v)*k);const n=Math.hypot(...o)||1;return o.map(v=>v/n)}
+let sm=null;
 function smooth(p){
-  if(!sm){sm={...p};return sm}
-  const k=.55;for(const q in p)sm[q]=sm[q]+(p[q]-sm[q])*k;return sm;
+  const q=p.f?m2q(p.f.R):null;
+  if(!sm){sm={p2:{...p.p2},f:p.f?{q,s:p.f.s,t:p.f.t.slice()}:null};return sm}
+  const k=.5;
+  for(const z in p.p2)sm.p2[z]+=(p.p2[z]-sm.p2[z])*k;
+  if(p.f){if(!sm.f)sm.f={q,s:p.f.s,t:p.f.t.slice()};else{sm.f.q=slerp(sm.f.q,q,k);sm.f.s+=(p.f.s-sm.f.s)*k;for(let i=0;i<3;i++)sm.f.t[i]+=(p.f.t[i]-sm.f.t[i])*k}}
+  return sm;
+}
+
+// ---- 3D glasses (units = canonical face centimetres) ----
+let THREE=null,glr=null,scene=null,cam=null,root=null,rig=null,rigFor=null;
+const FACE_W=15.33,WG=FACE_W*1.02,GY=2.3,GZ=6.8,BEND=.012;
+async function loadThree(){
+  if(THREE)return THREE;
+  try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js')}catch(e){console.log('THREEFAIL',e&&e.message);THREE=null}
+  return THREE;
+}
+function texOf(c){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.needsUpdate=true;return t}
+function buildRig(f){
+  if(rig){root.remove(rig);rig.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose()}})}
+  rig=new THREE.Group();rigFor=f;
+  const g=new THREE.Group();g.position.set(0,GY,GZ);rig.add(g);
+  const mat=c=>new THREE.MeshBasicMaterial({map:texOf(c),transparent:true,alphaTest:.02,side:THREE.DoubleSide});
+  const fh=WG*f.cv.height/f.cv.width;
+  const fg=new THREE.PlaneGeometry(WG,fh,24,1);const pa=fg.attributes.position;
+  for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setZ(i,-BEND*x*x)}
+  fg.computeBoundingSphere();
+  const front=new THREE.Mesh(fg,mat(f.cv));front.renderOrder=3;g.add(front);
+  if(f.sv){
+    const aw=WG*f.sv.width/f.cv.width,ah=WG*f.sv.height/f.cv.width;
+    const ag=new THREE.PlaneGeometry(aw,ah);
+    const am=mat(f.sv);
+    for(const sx of [1,-1]){
+      const a=new THREE.Mesh(ag,am);a.rotation.y=Math.PI/2;
+      a.position.set(sx*(WG/2-.3),fh/2-ah/2,-.25-aw/2);a.renderOrder=2;g.add(a);
+    }
+  }
+  root.add(rig);
+  // head occluder: hides the far arm behind the head
+  if(!root.userData.occ){
+    const o=new THREE.Mesh(new THREE.SphereGeometry(1,40,28),new THREE.MeshBasicMaterial({colorWrite:false}));
+    o.scale.set(7.1,10.6,8.6);o.position.set(0,.6,-3.0);o.renderOrder=-10;root.add(o);root.userData.occ=o;
+  }
+}
+function ensureGL(w,h){
+  if(!glr){
+    glr=new THREE.WebGLRenderer({alpha:true,antialias:true,premultipliedAlpha:true});
+    glr.setPixelRatio(1);glr.outputColorSpace=THREE.SRGBColorSpace;glr.setClearColor(0,0);
+    scene=new THREE.Scene();cam=new THREE.OrthographicCamera(0,w,0,-h,.1,8000);cam.position.z=4000;
+    root=new THREE.Group();scene.add(root);
+  }
+  if(glr.domElement.width!==w||glr.domElement.height!==h){glr.setSize(w,h,false);cam.right=w;cam.bottom=-h;cam.updateProjectionMatrix()}
 }
 function drawGlasses(p){
   const f=FR[cur];if(!f.cv)return;
-  const w=p.w*1.02,h=w*f.cv.height/f.cv.width;
-  ctx.save();ctx.translate(p.cx,p.cy+p.w*.015);ctx.rotate(p.roll);ctx.scale(p.sx,1);
+  if(THREE&&p.f){
+    try{
+      ensureGL(cv.width,cv.height);
+      if(rigFor!==f||!rig)buildRig(f);
+      const F=p.f;root.quaternion.set(F.q[0],F.q[1],F.q[2],F.q[3]);root.position.set(F.t[0],F.t[1],F.t[2]);root.scale.setScalar(F.s);
+      glr.render(scene,cam);
+      ctx.save();ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=F.s*.35;ctx.shadowOffsetY=F.s*.2;
+      ctx.drawImage(glr.domElement,0,0,cv.width,cv.height);ctx.restore();
+      return;
+    }catch(e){console.log('GLFAIL',e&&e.message,e&&e.stack&&e.stack.slice(0,300));THREE=null}
+  }
+  const q=p.p2,w=q.w*1.02,h=w*f.cv.height/f.cv.width;
+  ctx.save();ctx.translate(q.cx,q.cy+q.w*.015);ctx.rotate(q.roll);ctx.scale(q.sx,1);
   ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=w*.02;ctx.shadowOffsetY=w*.012;
   ctx.drawImage(f.cv,-w/2,-h/2,w,h);ctx.restore();
 }
@@ -199,7 +298,7 @@ $('bCam').onclick=async()=>{
   if(mode==='cam'){setMode('none');showHint(T.h1,T.h2);return}
   spinHint(T.loading);
   try{
-    const [L]=await Promise.all([tracker(),navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false}).then(s=>stream=s)]);
+    const [L]=await Promise.all([tracker(),loadThree(),navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false}).then(s=>stream=s)]);
     video=document.createElement('video');video.playsInline=true;video.muted=true;video.srcObject=stream;await video.play();
     await L.setOptions({runningMode:'VIDEO'});
     cv.width=video.videoWidth||960;cv.height=video.videoHeight||720;setMode('cam');sm=null;lastFace=null;hint.hidden=true;
@@ -229,11 +328,11 @@ $('file').onchange=async ev=>{
     const sc=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight));cv.width=Math.round(im.naturalWidth*sc);cv.height=Math.round(im.naturalHeight*sc);
     photoImg=im;hint.hidden=true;
     const r=L.detect(im);
-    lastFace=(r.faceLandmarks&&r.faceLandmarks[0])?pose(r.faceLandmarks[0],cv.width,cv.height,false):null;
+    await loadThree();sm=null;lastFace=(r.faceLandmarks&&r.faceLandmarks[0])?smooth(pose(r.faceLandmarks[0],cv.width,cv.height,false)):null;
     redraw();
   }catch(e){showHint(T.h1,T.camfail)}
   ev.target.value='';
 };
-window.__tryon={FR,select,get face(){return lastFace}};
+window.__tryon={dbg:()=>({rig,root,scene,cam,glr,THREE}),FR,select,get face(){return lastFace},async test(img,lm,mir){await loadThree();await Promise.allSettled(FR.map(prep));setMode('photo');cv.width=img.naturalWidth;cv.height=img.naturalHeight;photoImg=img;hint.hidden=true;sm=null;lastFace=smooth(pose(lm,cv.width,cv.height,!!mir));redraw();return lastFace}};
 </script>
 </body></html>
