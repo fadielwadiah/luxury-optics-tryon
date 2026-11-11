@@ -72,12 +72,12 @@ button:focus-visible,.btn:focus-visible,.item:focus-visible{outline:2px solid va
 const WA='201110255528', SITE='https://www.luxury-optics.com';
 const IMG='https://cdn.ososs.com/public/upload/companies/5307/products/';
 const FR=[
- ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd','gg1829sk-001-front-v4.png','gg1829sk-001-side-v4.png'],
- ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd'],
+ ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd'],
+ ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd','gg1829sk-brown-front-v1.png','gg1829sk-brown-side-v1.png',{ss:1.088,center:1,bend:.014,tuck:2.4}],
  ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front-v4.png','gg2152s-side-v3.png'],
  ['Gucci','GG2050S','gg2050s-3435432','889652626253-cat-xl_c_ffffff-fffffd-66666b'],
  ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d'],
- ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd','gg1703s-004-front-v4.png','gg1703s-004-side-v4.png'],
+ ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd'],
  ['Maui Jim','MJ0668S','mj0668s-3435379','603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b'],
  ['Maui Jim','MJ0674S','mj0674s-3435380','603429080075-cat-xl_c_ffffff-fffffd-666666'],
  ['Maui Jim','MJ0675S','mj0675s-3435381','603429080129-cat-xl_c_ffffff-fffffd-806a56'],
@@ -86,7 +86,7 @@ const FR=[
  ['Maui Jim','MJ0886S','mj0886s-3435385','603429072414-cat-xl_c_ffffff-fffffd-806d56'],
  ['Maui Jim','MJ0421S','mj0421s-3435371','603429015527-cat-xl_c_ffffff-fffffd-fdffff'],
  ['Maui Jim','MJ0655SA','mj0655sa-3435376','603429075767-cat-xl_c_ffffff-262626-fefefe']
-].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,side:a[5]||null,ready:null,cv:null,sv:null}));
+].map(a=>({brand:a[0],name:a[1],slug:a[2],file:a[3],url:a[4]||null,side:a[5]||null,o:a[6]||{},ready:null,cv:null,sv:null}));
 
 let lang='en';
 const ql=(new URLSearchParams(location.search).get('lang')||'').slice(0,2);
@@ -245,18 +245,18 @@ function buildRig(f){
   const mat=c=>new THREE.MeshBasicMaterial({map:texOf(c),transparent:true,alphaTest:.02,side:THREE.DoubleSide});
   const fh=WG*f.cv.height/f.cv.width;
   const fg=new THREE.PlaneGeometry(WG,fh,24,1);const pa=fg.attributes.position;
-  for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setZ(i,-BEND*x*x)}
+  for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setZ(i,-(f.o&&f.o.bend!=null?f.o.bend:BEND)*x*x)}
   fg.computeBoundingSphere();
   const front=new THREE.Mesh(fg,mat(f.cv));front.renderOrder=3;g.add(front);
   if(f.sv){
-    const aw=WG*f.sv.width/f.cv.width,ah=WG*f.sv.height/f.cv.width;
+    const o=f.o||{},ss=o.ss||1,aw=WG*ss*f.sv.width/f.cv.width,ah=WG*ss*f.sv.height/f.cv.width,TK=o.tuck!=null?o.tuck:TUCK;
     const am=mat(f.sv);
     for(const sx of [1,-1]){
       // the arm tucks inward toward the head over its last part, so its tip goes in behind the ear
       const ag=new THREE.PlaneGeometry(aw,ah,60,1);const ap=ag.attributes.position;
-      for(let i=0;i<ap.count;i++){const u=(ap.getX(i)+aw/2)/aw;let t=Math.max(0,Math.min(1,(u-.74)/.26));t=t*t*(3-2*t);ap.setZ(i,-sx*TUCK*t)}
+      for(let i=0;i<ap.count;i++){const u=(ap.getX(i)+aw/2)/aw;let t=Math.max(0,Math.min(1,(u-.74)/.26));t=t*t*(3-2*t);ap.setZ(i,-sx*TK*t)}
       const a=new THREE.Mesh(ag,am);a.rotation.y=Math.PI/2;
-      a.position.set(sx*(WG/2-.3),fh/2-ah/2,-.25-aw/2);a.renderOrder=2;g.add(a);
+      a.position.set(sx*(WG/2-.3),(o.center?(o.sy||0):fh/2-ah/2),-.25-aw/2);a.renderOrder=2;g.add(a);
     }
   }
   root.add(rig);
