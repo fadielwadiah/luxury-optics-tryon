@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find Your Frame</title>
+<style>
+:root{--bg:#F4EFE8;--ink:#111;--muted:#6b645a;--gold:#B89554;--card:#fff;--line:#DACDA9;--soft:#efe7da}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 36px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(26px,4vw,38px);margin:0 0 6px;letter-spacing:.01em}
+h2{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:21px;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 18px;font-size:15px;line-height:1.55;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.stage{position:relative;background:#e8e0d3;border:1px solid var(--line);aspect-ratio:4/3;overflow:hidden;display:flex;align-items:center;justify-content:center}
+canvas#cv{width:100%;height:100%;object-fit:contain;display:block}
+.hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--muted);font-size:15px;line-height:1.55}
+.hint b{font-family:Georgia,serif;font-weight:400;font-size:22px;color:var(--ink)}
+.badge{position:absolute;bottom:10px;inset-inline:10px;background:rgba(17,17,17,.8);color:#fff;font-size:13px;padding:7px 10px;text-align:center}
+.bar{height:4px;background:rgba(255,255,255,.25);margin-top:6px}.bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .15s}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0}
+button,.btn{font:inherit;font-size:14px;letter-spacing:.04em;padding:12px 18px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.ghost,.btn.ghost{background:transparent;color:var(--ink)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#111}
+.btn.sm{padding:8px 12px;font-size:12.5px}
+button:focus-visible,.btn:focus-visible,.tile:focus-visible,.chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.priv{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.55}
+.card{background:var(--card);border:1px solid var(--line);padding:16px;margin:0 0 16px}
+.eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 6px}
+.res-name{font-family:Georgia,serif;font-size:28px;line-height:1.15;margin:0 0 6px}
+.res-desc{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0 0 10px}
+.meter{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--muted);margin:10px 0}
+.meter i{display:block;height:6px;background:var(--soft);position:relative}.meter i b{position:absolute;inset-block:0;inset-inline-start:0;background:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
+.chip{font:inherit;font-size:12.5px;letter-spacing:0;padding:6px 10px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.small{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.shapes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media(max-width:520px){.shapes{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{position:relative;background:var(--card);border:1px solid var(--line);padding:8px 4px 8px;cursor:pointer;text-align:center;font:inherit;color:inherit;letter-spacing:0}
+.tile[aria-pressed=true]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.tile canvas{width:100%;height:44px;display:block}
+.tile span{display:block;font-size:11.5px;margin-top:4px;line-height:1.25}
+.star{position:absolute;top:2px;inset-inline-start:4px;color:var(--gold);font-size:13px;line-height:1}
+.dot{position:absolute;top:5px;inset-inline-end:5px;width:7px;height:7px;border-radius:50%;background:#2f7d4f}
+.dot.no{background:#c7bfb0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 0}.legend span{display:inline-flex;gap:5px;align-items:center}
+.legend .star{position:static}.legend .dot{position:static}
+.colors{display:flex;gap:8px;margin:12px 0 0;align-items:center;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 2px var(--gold)}
+.avail{margin-top:6px}
+.avail-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.prods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:860px){.prods{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pc{background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;text-decoration:none;color:inherit}
+.pc img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#fff;display:block}
+.pc div{padding:8px 10px 10px;border-top:1px solid var(--line)}
+.pc small{display:block;color:var(--muted);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+.pc b{font-family:Georgia,serif;font-weight:400;font-size:16px}
+.pc em{display:block;font-style:normal;color:var(--gold);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.notice{background:var(--card);border:1px dashed var(--gold);padding:16px;line-height:1.6}
+.notice p{margin:0 0 12px}
+.spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+.disc{font-size:12px;color:var(--muted);margin:22px 0 0;line-height:1.6;border-top:1px solid var(--line);padding-top:12px}
+[hidden]{display:none!important}
+</style></head>
+<body>
+<div class="wrap" id="app">
+  <h1 id="t_title"></h1>
+  <p class="sub" id="t_sub"></p>
+  <div class="grid">
+    <div>
+      <div class="stage" id="stage">
+        <canvas id="cv" width="960" height="720"></canvas>
+        <video id="vid" playsinline muted hidden></video>
+        <div class="hint" id="hint"></div>
+        <div class="badge" id="badge" hidden><span id="badgeT"></span><div class="bar" id="bar" hidden><i id="barI"></i></div></div>
+      </div>
+      <div class="row">
+        <button id="bCam"></button>
+        <button class="ghost" id="bPhoto"></button>
+        <button class="ghost" id="bStop" hidden></button>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+      <p class="priv" id="t_priv"></p>
+    </div>
+    <div>
+      <div class="card" id="resCard" hidden>
+        <p class="eyebrow" id="t_resEy"></p>
+        <p class="res-name" id="resName"></p>
+        <p class="res-desc" id="resDesc"></p>
+        <div class="meter" id="meter"></div>
+        <p class="small" id="t_notRight"></p>
+        <div class="chips" id="faceChips"></div>
+      </div>
+      <div class="card" id="shapeCard">
+        <h2 id="t_pick"></h2>
+        <div class="shapes" id="shapes"></div>
+        <div class="legend"><span><i class="star">★</i><span id="lg1"></span></span><span><i class="dot"></i><span id="lg2"></span></span><span><i class="dot no"></i><span id="lg3"></span></span></div>
+        <div class="colors" id="colors"><span class="small" id="t_color" style="margin:0"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="avail card" id="avail" hidden></div>
+  <p class="disc" id="t_disc"></p>
+</div>
+
+<script type="module">
+const WA='201110255528', SITE='https://www.luxury-optics.com';
+const IMG={C:'https://cdn.ososs.com/public/upload/companies/5307/products/',S:'https://zfloos-production-storage.s3.eu-central-1.amazonaws.com/public/upload/companies/5307/products/'};
+const PRODUCTS=[{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435430","host":"C","file":"917944043816af4701d4ad4e3_01565596_c_f5efea-525148-f3ede9_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435431","host":"C","file":"717944045516af470c76bf874_80091127_c_f5efea-755045-724d43_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG2051S","slug":"gg2051s-3435433","host":"C","file":"317944880346af5b6e2522830_75796196_c_f5efea-f3efea-454342_thumbnail.webp"},{"shape":"geometric","brand":"Gucci","name":"GG2050S","slug":"gg2050s-3435432","host":"S","file":"889652626253-cat-xl_c_ffffff-fffffd-66666b_thumbnail.webp"},{"shape":"rectangle","brand":"Gucci","name":"GG1703S","slug":"gg1703s-3435429","host":"C","file":"317944047226af47172328587_79924366_c_f5efea-6b5236-6c5337_thumbnail.webp"},{"shape":"square","brand":"Gucci","name":"GG2152S","slug":"gg2152s-3435434","host":"C","file":"817944046336af47119a6e8e4_52856894_c_f5efea-65423a-66433b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435425","host":"S","file":"889652621920-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435426","host":"S","file":"889652621951-cat-xl_c_ffffff-516057-fffffd_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435427","host":"S","file":"889652621968-cat-xl_c_ffffff-4b4b4b-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0533O","slug":"pu0533o-3435424","host":"S","file":"889652621784-cat-xl_c_ffffff-fefefe-fdfdfd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435377","host":"S","file":"603429079796-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435378","host":"S","file":"603429079826-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0668S","slug":"mj0668s-3435379","host":"S","file":"603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435412","host":"S","file":"889652536712-cat-xl_c_ffffff-424242-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435413","host":"C","file":"889652536729-cat-xl_c_ffffff-484a49-fdffff.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0507O","slug":"pu0507o-3435416","host":"S","file":"889652563770-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0509O","slug":"pu0509o-3435417","host":"S","file":"889652564685-cat-xl_c_ffffff-fffffd-a5a6a3_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0485O","slug":"pu0485o-3435403","host":"S","file":"889652538464-cat-xl_c_ffffff-fdfdfd-fdffff_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0451O","slug":"pu0451o-3435397","host":"S","file":"889652481968-cat-xl_c_ffffff-fcfbfc-fdffff_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0434O","slug":"pu0434o-3435391","host":"S","file":"889652436999-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0511O","slug":"pu0511o-3435419","host":"C","file":"889652563886-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0510O","slug":"pu0510o-3435418","host":"C","file":"889652564616-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"rectangle","brand":"Maui Jim","name":"MJ0655SA","slug":"mj0655sa-3435376","host":"S","file":"603429075767-cat-xl_c_ffffff-262626-fefefe_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435408","host":"S","file":"889652536323-cat-xl_c_ffffff-464d4d-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435409","host":"S","file":"889652536347-cat-xl_c_ffffff-384661-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435394","host":"S","file":"889652493749-cat-xl_c_ffffff-3f4646-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435393","host":"S","file":"889652493725-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0484S","slug":"pu0484s-3435402","host":"S","file":"889652536446-cat-xl_c_ffffff-424242-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0499SA","slug":"pu0499sa-3435411","host":"S","file":"889652563657-cat-xl_c_ffffff-465656-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435414","host":"C","file":"889652536835-cat-xl_c_ffffff-37526b-fdffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435415","host":"C","file":"889652536842-cat-xl_c_ffffff-53534f-fffffd.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0515S","slug":"pu0515s-3435421","host":"C","file":"889652564104-cat-xl_c_fefefe-7f7149-ffffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0478SA","slug":"pu0478sa-3435400","host":"S","file":"889652482545-cat-xl_c_ffffff-5a6062-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0479SA","slug":"pu0479sa-3435401","host":"S","file":"889652482606-cat-xl_c_ffffff-816455-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0674S","slug":"mj0674s-3435380","host":"S","file":"603429080075-cat-xl_c_ffffff-fffffd-666666_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0675S","slug":"mj0675s-3435381","host":"S","file":"603429080129-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0728S","slug":"mj0728s-3435384","host":"S","file":"603429036539-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0886S","slug":"mj0886s-3435385","host":"S","file":"603429072414-cat-xl_c_ffffff-fffffd-806d56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0589S","slug":"mj0589s-3435372","host":"S","file":"603429084257-cat-xl_c_ffffff-646464-828282_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435373","host":"S","file":"603429073299-cat-xl_c_ffffff-806a56-fffffd_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435374","host":"S","file":"603429073305-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0620S","slug":"mj0620s-3435375","host":"S","file":"603429076825-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0327S","slug":"mj0327s-3435370","host":"S","file":"603429018818-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0421S","slug":"mj0421s-3435371","host":"S","file":"603429015527-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"browline","brand":"Puma","name":"PU0472O","slug":"pu0472o-3435398","host":"S","file":"889652482323-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"browline","brand":"Puma","name":"PU0411O","slug":"pu0411o-3435389","host":"S","file":"889652436500-cat-xl_c_ffffff-fffffd-fefefe_thumbnail.webp"},{"shape":"browline","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435382","host":"S","file":"603429082055-cat-xl_c_ffffff-626262-7f7f7f_thumbnail.webp"},{"shape":"browline","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435383","host":"S","file":"603429082062-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"}];
+
+// ---------- language ----------
+let lang='en';
+const ql=(new URLSearchParams(location.search).get('lang')||'').slice(0,2);
+if(ql==='ar'||ql==='en')lang=ql;
+else{try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'}catch(e){lang=(navigator.language||'en').slice(0,2)}}
+if(lang!=='ar')lang='en';
+const AR=lang==='ar';
+
+const SH={ // frame shapes: names and short style notes
+ round:{en:'Round',ar:'دائري'},oval:{en:'Oval',ar:'بيضاوي'},square:{en:'Square',ar:'مربع'},rectangle:{en:'Rectangle',ar:'مستطيل'},
+ wayfarer:{en:'Wayfarer',ar:'وايفرر'},aviator:{en:'Aviator',ar:'أفييتر'},browline:{en:'Browline',ar:'براوالاين'},
+ catEye:{en:'Cat-eye',ar:'كات آي'},geometric:{en:'Geometric',ar:'هندسي'},oversized:{en:'Oversized',ar:'كبير (أوفرسايز)'}
+};
+const SHAPE_ORDER=['round','oval','square','rectangle','wayfarer','aviator','browline','catEye','geometric','oversized'];
+const FACE={
+ oval:{en:'Oval',ar:'بيضاوي',
+  d_en:'Balanced proportions: the face is a little longer than it is wide, with a softly rounded jaw. Most frame shapes suit it.',
+  d_ar:'نسب متوازنة: الوجه أطول قليلاً من عرضه مع فك مستدير بلطف. معظم أشكال الإطارات تناسبه.',
+  rec:['aviator','wayfarer','square','geometric','catEye'],
+  w_en:'Most shapes work, so choose by style. Square, aviator and geometric frames add definition.',
+  w_ar:'أغلب الأشكال تناسبك، فاختر حسب ذوقك. الإطارات المربعة والأفييتر والهندسية تعطي حضوراً أوضح.'},
+ round:{en:'Round',ar:'دائري',
+  d_en:'Face length and width are close, with soft curves and no strong angles.',
+  d_ar:'طول الوجه وعرضه متقاربان، بخطوط ناعمة وبدون زوايا حادة.',
+  rec:['rectangle','square','wayfarer','browline','geometric'],
+  w_en:'Angular frames add structure and make the face look a little longer.',
+  w_ar:'الإطارات ذات الزوايا تضيف بنية للوجه وتعطي إحساساً بطول أكبر.'},
+ square:{en:'Square',ar:'مربع',
+  d_en:'Forehead, cheeks and jaw are about the same width, with a strong jawline.',
+  d_ar:'الجبهة والخدان والفك بعرض متقارب تقريباً، مع خط فك واضح.',
+  rec:['round','oval','aviator','catEye'],
+  w_en:'Rounded and curved frames soften a strong jawline.',
+  w_ar:'الإطارات المستديرة والمنحنية تلطّف خط الفك القوي.'},
+ heart:{en:'Heart',ar:'قلب',
+  d_en:'A wider forehead that narrows toward the chin.',
+  d_ar:'جبهة أعرض تضيق باتجاه الذقن.',
+  rec:['oval','round','aviator','rectangle'],
+  w_en:'Frames that are lighter on top or wider at the bottom balance a wide forehead.',
+  w_ar:'الإطارات الأخف من الأعلى أو الأعرض من الأسفل توازن الجبهة العريضة.'},
+ oblong:{en:'Long',ar:'طويل',
+  d_en:'The face is clearly longer than it is wide, with a straight cheek line.',
+  d_ar:'الوجه أطول بوضوح من عرضه مع خط خدود مستقيم.',
+  rec:['oversized','square','wayfarer','round','aviator'],
+  w_en:'Taller and wider frames add width and shorten the look of the face.',
+  w_ar:'الإطارات الأطول والأعرض تضيف عرضاً وتقصّر مظهر الوجه.'},
+ diamond:{en:'Diamond',ar:'ماسي',
+  d_en:'The cheekbones are the widest part, with a narrower forehead and jaw.',
+  d_ar:'عظام الخدين هي الأعرض، مع جبهة وفك أضيق.',
+  rec:['catEye','oval','browline','round'],
+  w_en:'Frames that are wide on top or oval in shape highlight the cheekbones.',
+  w_ar:'الإطارات العريضة من الأعلى أو البيضاوية تبرز عظام الخدين.'}
+};
+const FACE_ORDER=['oval','round','square','heart','oblong','diamond'];
+const TX={
+ en:{title:'Find your frame',sub:'See which frame shapes suit your face, try them on, and find the ones we have in store.',
+  cam:'Start camera',photo:'Use a photo',stop:'Stop camera',retake:'Try again',
+  priv:'Everything happens on your device. Your camera feed and photos are not recorded or uploaded.',
+  h1:'Start with your face',h2:'Allow the camera and look straight at it, or upload a clear front-facing photo. Keep your hair off your forehead.',
+  loading:'Loading face tracker…',noface:'We can\'t see a face. Face the camera and keep your whole face in view.',
+  hold:'Hold still and look straight ahead…',measuring:'Measuring your face',camfail:'We could not open the camera. You can upload a photo instead.',loadfail:'The face tracker could not load. Please check your internet connection and open this page in your phone\'s browser (Chrome or Safari), then try again.',
+  turned:'Your face looks slightly turned, so the result may be less accurate. A straight-on photo works best.',
+  resEy:'Your face shape (approximate)',notRight:'Not right? Pick the one that looks most like you:',
+  meterLen:'Length to width',meterFore:'Forehead to cheeks',meterJaw:'Jaw to cheeks',
+  pick:'Try frame shapes',lg1:'Suggested for you',lg2:'In our store',lg3:'Not available now',color:'Frame colour',
+  black:'Black',tortoise:'Tortoise',gold:'Gold',
+  avail:s=>`${s} frames at Luxury Optics`,availSub:'Tap a frame to open its page.',view:'View frame',ask:'Ask on WhatsApp',
+  none:'This frame shape is not available at the moment.',
+  noneP:'Message us on WhatsApp and we will suggest frames we have in the shop that suit you.',
+  more:'Want more options? Ask us on WhatsApp and we will suggest more.',
+  sugg:'Suggested for you',tag:'Suggested',
+  waShape:(s,f)=>f?`Hello, the Find Your Frame tool suggests that my face shape is ${f}. I tried ${s} frames. Could you suggest frames you have in the shop that suit me?`:`Hello, I tried ${s} frames on your Find Your Frame tool. Could you suggest frames you have in the shop that suit me?`,
+  inStore:n=>n+(n===1?' frame':' frames'),
+  disc:'These are general styling suggestions, not strict rules. Face shape is estimated from your photo and may be slightly off. Choose what you like and feel comfortable in. Frame shapes shown here are illustrations; the products listed are real frames available at Luxury Optics.'},
+ ar:{title:'اعرف إطارك المناسب',sub:'شوف أشكال الإطارات المناسبة لوجهك، جرّبها عليك، وتعرّف على المتوفر منها في المحل.',
+  cam:'شغّل الكاميرا',photo:'استخدم صورة',stop:'أوقف الكاميرا',retake:'جرّب مرة ثانية',
+  priv:'كل شي بيصير على جهازك. الكاميرا والصور لا يتم تسجيلها ولا رفعها.',
+  h1:'ابدأ بوجهك',h2:'اسمح بالكاميرا وانظر إليها مباشرة، أو ارفع صورة أمامية واضحة. خلّي شعرك بعيد عن الجبهة.',
+  loading:'جاري تحميل متتبع الوجه…',noface:'ما قدرنا نشوف وجهك. وجّه وجهك نحو الكاميرا وخلّيه كله ظاهر.',
+  hold:'ثبّت وجهك وانظر للأمام…',measuring:'نقيس وجهك',camfail:'ما قدرنا نفتح الكاميرا. تقدر ترفع صورة بدلاً منها.',loadfail:'ما قدرنا نحمّل متتبع الوجه. تأكد من الإنترنت وافتح الصفحة من متصفح الجوال (كروم أو سفاري) وجرّب مرة ثانية.',
+  turned:'وجهك يبدو مائلاً قليلاً، فقد تكون النتيجة أقل دقة. الصورة المباشرة من الأمام أفضل.',
+  resEy:'شكل وجهك (تقريبي)',notRight:'مش مضبوط؟ اختر الشكل الأقرب لوجهك:',
+  meterLen:'الطول إلى العرض',meterFore:'الجبهة إلى الخدين',meterJaw:'الفك إلى الخدين',
+  pick:'جرّب أشكال الإطارات',lg1:'مقترح لك',lg2:'متوفر في المحل',lg3:'غير متوفر حالياً',color:'لون الإطار',
+  black:'أسود',tortoise:'سلحفاة',gold:'ذهبي',
+  avail:s=>`إطارات ${s} في Luxury Optics`,availSub:'اضغط على أي نظارة لفتح صفحتها.',view:'عرض المنتج',ask:'اسأل عبر واتساب',
+  none:'هذا الشكل من الإطارات غير متوفر في الوقت الحالي.',
+  noneP:'راسلنا على واتساب ونقترح عليك من نظاراتنا الموجودة في المحل ما يناسبك.',
+  more:'بدك خيارات أكثر؟ اسألنا عبر واتساب ونقترح عليك المزيد.',
+  sugg:'مقترح لك',tag:'مقترح',
+  waShape:(s,f)=>f?`مرحباً، أداة اختيار الإطار اقترحت أن شكل وجهي ${f}، وجربت إطارات ${s}. ممكن تقترحوا عليّ نظارات موجودة عندكم في المحل تناسبني؟`:`مرحباً، جربت إطارات ${s} على أداة اختيار الإطار. ممكن تقترحوا عليّ نظارات موجودة عندكم في المحل تناسبني؟`,
+  inStore:n=>n+' '+(n===1?'نظارة':'نظارات'),
+  disc:'هذه اقتراحات عامة في اختيار الإطار وليست قواعد ثابتة. شكل الوجه يُقدَّر من صورتك وقد لا يكون دقيقاً تماماً. اختر ما يعجبك ويريحك. أشكال الإطارات المعروضة للتجربة توضيحية، أما النظارات المعروضة تحتها فهي نظارات حقيقية متوفرة في Luxury Optics.'}
+}[lang];
+document.documentElement.lang=lang;document.documentElement.dir=AR?'rtl':'ltr';document.title=TX.title;
+const $=id=>document.getElementById(id);
+$('t_title').textContent=TX.title;$('t_sub').textContent=TX.sub;$('t_priv').textContent=TX.priv;$('t_pick').textContent=TX.pick;
+$('bCam').textContent=TX.cam;$('bPhoto').textContent=TX.photo;$('bStop').textContent=TX.stop;
+$('lg1').textContent=TX.lg1;$('lg2').textContent=TX.lg2;$('lg3').textContent=TX.lg3;$('t_color').textContent=TX.color+':';
+$('t_resEy').textContent=TX.resEy;$('t_notRight').textContent=TX.notRight;$('t_disc').textContent=TX.disc;
+
+// ---------- store availability ----------
+const byShape={};for(const p of PRODUCTS){(byShape[p.shape]=byShape[p.shape]||[]).push(p)}
+const count=s=>(byShape[s]||[]).length;
+const prodUrl=p=>SITE+(AR?'':'/en')+'/products/'+p.slug;
+const waLink=txt=>'https://wa.me/'+WA+'?text='+encodeURIComponent(txt);
+
+// ---------- frame drawing (mm units, lens centred at 0,0) ----------
+const DIM={ // lens width, lens height, bridge (mm)
+ round:[50,50,20],oval:[52,38,18],square:[50,46,19],rectangle:[54,34,18],wayfarer:[52,42,18],aviator:[58,50,14],
+ browline:[52,40,19],catEye:[54,44,18],geometric:[52,42,18],oversized:[62,54,18]
+};
+function rr(c,x,y,w,h,r){c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath()}
+function lensPath(c,s,w,h){ // outer side is +x
+ c.beginPath();
+ switch(s){
+  case 'round':case 'oval':c.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);break;
+  case 'square':rr(c,-w/2,-h/2,w,h,h*.14);break;
+  case 'rectangle':rr(c,-w/2,-h/2,w,h,h*.16);break;
+  case 'wayfarer':c.moveTo(-w/2,-h/2+2);c.quadraticCurveTo(0,-h/2-3,w/2,-h/2-1);c.quadraticCurveTo(w/2+1,-h/2+2,w/2-1,-h/2+8);c.lineTo(w/2-5,h/2-7);c.quadraticCurveTo(w/2-6,h/2,w/2-14,h/2);c.lineTo(-w/2+12,h/2);c.quadraticCurveTo(-w/2+2,h/2,-w/2+1,h/2-9);c.closePath();break;
+  case 'aviator':c.moveTo(-w/2,-h/6);c.bezierCurveTo(-w/2,-h/2.05,w/2,-h/2.05,w/2,-h/6);c.bezierCurveTo(w/2,h/3,w/5,h/2,0,h/2);c.bezierCurveTo(-w/5,h/2,-w/2,h/3,-w/2,-h/6);c.closePath();break;
+  case 'browline':rr(c,-w/2,-h/2,w,h,h*.3);break;
+  case 'catEye':c.moveTo(-w/2,-h*.08);c.bezierCurveTo(-w/2,-h*.42,-w*.08,-h*.44,w*.14,-h*.4);c.lineTo(w/2,-h*.58);c.bezierCurveTo(w*.54,-h*.1,w*.38,h*.42,0,h*.5);c.bezierCurveTo(-w*.3,h*.5,-w/2,h*.32,-w/2,-h*.08);c.closePath();break;
+  case 'geometric':c.moveTo(-w/2,0);c.lineTo(-w/4,-h/2);c.lineTo(w/4,-h/2);c.lineTo(w/2,0);c.lineTo(w/4,h/2);c.lineTo(-w/4,h/2);c.closePath();break;
+  case 'oversized':c.moveTo(-w/2,-h/4);c.quadraticCurveTo(-w/2,-h/2,-w/4,-h/2);c.lineTo(w/3,-h/2);c.quadraticCurveTo(w/2,-h/2,w/2,-h/3);c.lineTo(w/2,h/6);c.quadraticCurveTo(w/2,h/2,w/5,h/2);c.lineTo(-w/4,h/2);c.quadraticCurveTo(-w/2,h/2,-w/2,h/6);c.closePath();break;
+ }
+}
+const COL={
+ black:{stroke:'#121212',th:4.4,metal:false},
+ tortoise:{stroke:null,th:4.4,metal:false},
+ gold:{stroke:'#C9A24D',th:1.9,metal:true}
+};
+function strokeFor(c,key,x0,y0,x1,y1){
+ if(key==='tortoise'){const g=c.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'#4a2410');g.addColorStop(.35,'#8a5527');g.addColorStop(.6,'#3b1c0b');g.addColorStop(1,'#7a4a20');return g}
+ return COL[key].stroke;
+}
+// draws a pair of lenses+bridge+stubs centred on (0,0), in mm; k = pixels per mm (already applied by caller transform)
+function drawFrame(c,shape,key,opt){
+ const [w,h,br]=DIM[shape],cx=(w+br)/2,col=COL[key],th=col.th*(shape==='oversized'?1.1:1);
+ c.lineJoin='round';c.lineCap='round';
+ // temples first (behind)
+ const ty=-h*(shape==='catEye'?.42:.28);
+ const tg=(sx)=>{const g=c.createLinearGradient(sx*(cx+w/2),0,sx*(cx+w/2+34),0);g.addColorStop(0,strokeFor(c,key,0,0,40,10)||'#111');g.addColorStop(1,'rgba(20,20,20,0)');return g};
+ if(!opt.icon){for(const sx of [-1,1]){c.beginPath();c.moveTo(sx*(cx+w/2-1),ty);c.lineTo(sx*(cx+w/2+30),ty+3);c.lineWidth=col.metal?1.6:th*.8;c.strokeStyle=key==='tortoise'?'#5a3015':(key==='gold'?'#C9A24D':'#161616');c.globalAlpha=.9;c.stroke();c.globalAlpha=1}}
+ // lenses
+ for(const sx of [-1,1]){
+  c.save();c.translate(sx*cx,0);if(sx<0)c.scale(-1,1);
+  lensPath(c,shape,w,h);
+  const lg=c.createLinearGradient(0,-h/2,0,h/2);
+  if(opt.icon){c.fillStyle='rgba(120,110,95,.16)'}else{lg.addColorStop(0,'rgba(25,25,28,.52)');lg.addColorStop(1,'rgba(25,25,28,.30)');c.fillStyle=lg}
+  c.fill();
+  if(!opt.icon){c.save();lensPath(c,shape,w,h);c.clip();c.globalAlpha=.16;c.fillStyle='#fff';c.beginPath();c.moveTo(-w/2,-h/2);c.lineTo(-w*.1,-h/2);c.lineTo(-w*.45,h/2);c.lineTo(-w/2,h/2);c.closePath();c.fill();c.restore()}
+  if(shape==='browline'){ // thick brow bar
+   c.save();lensPath(c,shape,w,h);c.clip();c.beginPath();c.rect(-w/2-2,-h/2-2,w+4,h*.34);c.fillStyle=strokeFor(c,key,-w/2,-h/2,w/2,0)||'#111';c.fill();c.restore();
+   lensPath(c,shape,w,h);c.lineWidth=col.metal?th:1.6;c.strokeStyle=strokeFor(c,key,-w/2,-h/2,w/2,h/2);c.stroke();
+  }else{lensPath(c,shape,w,h);c.lineWidth=th;c.strokeStyle=strokeFor(c,key,-w/2,-h/2,w/2,h/2);c.stroke()}
+  c.restore();
+ }
+ // bridge
+ c.beginPath();c.moveTo(-(cx-w/2),-h*.22);c.quadraticCurveTo(0,-h*(shape==='aviator'?.42:.36),cx-w/2,-h*.22);
+ c.lineWidth=Math.max(col.metal?1.6:3,th*.7);c.strokeStyle=strokeFor(c,key,-10,0,10,0);c.stroke();
+ if(shape==='aviator'){c.beginPath();c.moveTo(-cx,-h*.4);c.quadraticCurveTo(0,-h*.5,cx,-h*.4);c.lineWidth=1.5;c.stroke()}
+}
+function drawIcon(cvs,shape){
+ const dpr=Math.min(2,window.devicePixelRatio||1),W=cvs.clientWidth||90,H=cvs.clientHeight||44;
+ cvs.width=W*dpr;cvs.height=H*dpr;const c=cvs.getContext('2d');c.scale(dpr,dpr);
+ const [w,h,br]=DIM[shape],tot=w*2+br+6,k=Math.min(W/tot,H/(h+6));
+ c.translate(W/2,H/2);c.scale(k,k);drawFrame(c,shape,'black',{icon:true});
+}
+
+// ---------- state ----------
+let curShape='aviator',curColor='black',face=null,faceKey=null,mode='none'; // mode: none|live|photo
+let lmk=null,loadingLmk=null,stream=null,raf=0,still=null,stillLm=null,samples=[],busy=false;
+const cv=$('cv'),ctx=cv.getContext('2d'),vid=$('vid'),hint=$('hint'),badge=$('badge');
+function showHint(h,p,spin){hint.hidden=false;hint.innerHTML='';if(spin){const s=document.createElement('div');s.className='spin';hint.appendChild(s)}if(h){const b=document.createElement('b');b.textContent=h;hint.appendChild(b)}if(p){const s=document.createElement('div');s.textContent=p;hint.appendChild(s)}}
+function setBadge(t,prog){if(!t){badge.hidden=true;return}badge.hidden=false;$('badgeT').textContent=t;$('bar').hidden=prog==null;if(prog!=null)$('barI').style.width=Math.round(prog*100)+'%'}
+showHint(TX.h1,TX.h2);
+
+// ---------- shapes UI ----------
+function buildShapes(){
+ const box=$('shapes');box.innerHTML='';
+ const rec=faceKey?FACE[faceKey].rec:[];
+ for(const s of SHAPE_ORDER){
+  const b=document.createElement('button');b.className='tile';b.type='button';b.setAttribute('aria-pressed',String(s===curShape));
+  const cvn=document.createElement('canvas');b.appendChild(cvn);
+  const sp=document.createElement('span');sp.textContent=SH[s][lang];b.appendChild(sp);
+  if(rec.includes(s)){const st=document.createElement('i');st.className='star';st.textContent='★';b.appendChild(st)}
+  const d=document.createElement('i');d.className='dot'+(count(s)?'':' no');b.appendChild(d);
+  b.title=SH[s][lang];b.onclick=()=>{curShape=s;buildShapes();renderAvail()};
+  box.appendChild(b);requestAnimationFrame(()=>drawIcon(cvn,s));
+ }
+}
+function buildColors(){
+ const box=$('colors');[...box.querySelectorAll('.sw')].forEach(n=>n.remove());
+ const bg={black:'#121212',tortoise:'linear-gradient(135deg,#4a2410,#8a5527 45%,#3b1c0b)',gold:'#C9A24D'};
+ for(const k of ['black','tortoise','gold']){const b=document.createElement('button');b.className='sw';b.type='button';b.style.background=bg[k];b.title=TX[k];b.setAttribute('aria-label',TX[k]);b.setAttribute('aria-pressed',String(k===curColor));b.onclick=()=>{curColor=k;buildColors();redraw()};box.appendChild(b)}
+}
+function buildFaceChips(){
+ const box=$('faceChips');box.innerHTML='';
+ for(const f of FACE_ORDER){const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=FACE[f][lang];b.setAttribute('aria-pressed',String(f===faceKey));b.onclick=()=>{setFace(f,true)};box.appendChild(b)}
+}
+function setFace(f,manual){
+ faceKey=f;const F=FACE[f];
+ $('resCard').hidden=false;$('resName').textContent=F[lang];$('resDesc').textContent=F['d_'+lang]+' '+F['w_'+lang];
+ buildFaceChips();
+ if(!manual||!curShape||!F.rec.includes(curShape))curShape=F.rec.find(s=>count(s))||F.rec[0];
+ buildShapes();renderAvail();redraw();
+}
+function renderMeter(m){
+ const box=$('meter');box.innerHTML='';
+ if(!m)return;
+ const row=(label,v,lo,hi)=>{const a=document.createElement('span');a.textContent=label;const i=document.createElement('i');const b=document.createElement('b');b.style.width=Math.round(Math.max(.04,Math.min(1,(v-lo)/(hi-lo)))*100)+'%';i.appendChild(b);const n=document.createElement('span');n.textContent=v.toFixed(2);box.append(a,i,n)};
+ row(TX.meterLen,m.r,1.0,1.4);row(TX.meterFore,m.fj,.7,1.05);row(TX.meterJaw,m.jw,.7,1.05);
+}
+
+// ---------- availability ----------
+function renderAvail(){
+ const box=$('avail');box.hidden=false;box.innerHTML='';
+ const sn=SH[curShape][lang],list=byShape[curShape]||[];
+ const fn=faceKey?FACE[faceKey][lang]:'';
+ if(!list.length){
+  const h=document.createElement('h2');h.textContent=TX.avail(sn);box.appendChild(h);
+  const n=document.createElement('div');n.className='notice';
+  const p1=document.createElement('p');p1.innerHTML='';const b=document.createElement('b');b.textContent=TX.none;p1.appendChild(b);
+  const p2=document.createElement('p');p2.textContent=TX.noneP;
+  const a=document.createElement('a');a.className='btn gold';a.target='_blank';a.rel='noopener';a.textContent=TX.ask;a.href=waLink(TX.waShape(sn,fn));
+  n.append(p1,p2,a);box.appendChild(n);return;
+ }
+ const head=document.createElement('div');head.className='avail-head';
+ const h=document.createElement('h2');h.style.margin='0';h.textContent=TX.avail(sn);
+ const sm=document.createElement('span');sm.className='small';sm.style.margin='0';sm.textContent=TX.inStore(list.length)+' · '+TX.availSub;
+ head.append(h,sm);box.appendChild(head);
+ const g=document.createElement('div');g.className='prods';
+ for(const p of list.slice(0,12)){
+  const a=document.createElement('a');a.className='pc';a.href=prodUrl(p);a.target='_blank';a.rel='noopener';
+  const im=document.createElement('img');im.loading='lazy';im.alt=p.brand+' '+p.name;im.src=IMG[p.host]+p.file;
+  const d=document.createElement('div');const s=document.createElement('small');s.textContent=p.brand;const b=document.createElement('b');b.textContent=p.name;const e=document.createElement('em');e.textContent=TX.view;
+  d.append(s,b,e);a.append(im,d);g.appendChild(a);
+ }
+ box.appendChild(g);
+ const row=document.createElement('div');row.className='row';
+ const wa=document.createElement('a');wa.className='btn ghost sm';wa.target='_blank';wa.rel='noopener';wa.textContent=TX.ask;wa.href=waLink(TX.waShape(sn,fn));
+ const t=document.createElement('span');t.className='small';t.style.margin='auto 0';t.textContent=TX.more;
+ row.append(wa,t);box.appendChild(row);
+}
+
+// ---------- face tracker ----------
+async function getLmk(){
+ if(lmk)return lmk;if(loadingLmk)return loadingLmk;
+ loadingLmk=(async()=>{
+  const base='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+  const M=await import(base+'/vision_bundle.mjs');
+  const fs=await M.FilesetResolver.forVisionTasks(base+'/wasm');
+  const model='https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+  const mk=d=>M.FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:model,delegate:d},runningMode:'IMAGE',numFaces:1});
+  try{lmk=await mk('GPU')}catch(e){lmk=await mk('CPU')}
+  return lmk;
+ })();
+ return loadingLmk;
+}
+let curMode='IMAGE';
+async function setMode(m){const L=await getLmk();if(curMode!==m){await L.setOptions({runningMode:m});curMode=m}return L}
+
+// metrics from 478 landmarks (normalised coords); distances in pixels of a W x H frame
+function metrics(l,W,H){
+ const P=i=>({x:l[i].x*W,y:l[i].y*H}),D=(a,b)=>Math.hypot(P(a).x-P(b).x,P(a).y-P(b).y);
+ const cheek=D(234,454),fore=D(54,284),jaw=D(58,288),len=D(10,152);
+ const nL=D(1,234),nR=D(1,454),asym=Math.abs(nL-nR)/(nL+nR); // turned-head proxy
+ const e1=P(33),e2=P(263);let roll=Math.atan2(e2.y-e1.y,e2.x-e1.x);if(Math.abs(roll)>Math.PI/2)roll+=Math.PI;
+ return {r:len/cheek,fj:fore/cheek,jw:jaw/cheek,asym,roll:Math.abs(roll*180/Math.PI),cheek};
+}
+function classify(m){
+ const g=(v,mu,sd)=>Math.exp(-.5*((v-mu)/sd)**2);
+ const S={
+  oval:   g(m.r,1.19,.06)*g(m.jw,.86,.07)*g(m.fj,.88,.07),
+  round:  g(m.r,1.08,.05)*g(m.jw,.90,.07)*g(m.fj,.89,.07),
+  square: g(m.r,1.12,.07)*g(m.jw,.95,.05)*g(m.fj,.94,.06),
+  heart:  g(m.r,1.20,.09)*g(m.jw,.76,.06)*g(m.fj,.94,.06),
+  oblong: g(m.r,1.38,.07)*g(m.jw,.88,.09)*g(m.fj,.90,.09),
+  diamond:g(m.r,1.22,.08)*g(m.jw,.78,.06)*g(m.fj,.78,.06)
+ };
+ let best='oval';for(const k in S)if(S[k]>S[best])best=k;
+ return best;
+}
+function median(a){const b=a.slice().sort((x,y)=>x-y);return b[Math.floor(b.length/2)]}
+function aggregate(ss){return {r:median(ss.map(s=>s.r)),fj:median(ss.map(s=>s.fj)),jw:median(ss.map(s=>s.jw)),asym:median(ss.map(s=>s.asym)),roll:median(ss.map(s=>s.roll))}}
+
+// ---------- overlay ----------
+const KEY=()=>curColor;
+function overlay(c,l,W,H,mir){
+ const P=i=>({x:(mir?1-l[i].x:l[i].x)*W,y:l[i].y*H});
+ const hasIris=l.length>473;
+ const a=hasIris?P(468):{x:(P(33).x+P(133).x)/2,y:(P(33).y+P(133).y)/2};
+ const b=hasIris?P(473):{x:(P(362).x+P(263).x)/2,y:(P(362).y+P(263).y)/2};
+ const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+ let roll=Math.atan2(b.y-a.y,b.x-a.x);if(Math.abs(roll)>Math.PI/2)roll+=Math.PI;
+ const e=P(234),g=P(454),n=P(1);
+ const faceW=Math.hypot(g.x-e.x,g.y-e.y),k=faceW/140;
+ const dl=Math.hypot(n.x-e.x,n.y-e.y),dr=Math.hypot(g.x-n.x,g.y-n.y);
+ const r=Math.max(-1,Math.min(1,(dl-dr)/(dl+dr)*1.5)),sx=Math.max(.55,Math.cos(Math.asin(r)));
+ c.save();c.translate(mid.x,mid.y);c.rotate(roll);c.scale(sx*k,k);
+ drawFrame(c,curShape,KEY(),{});
+ c.restore();
+}
+function redraw(){
+ if(mode==='photo'&&still){
+  ctx.drawImage(still,0,0,cv.width,cv.height);
+  if(stillLm)overlay(ctx,stillLm,cv.width,cv.height,false);
+ }
+}
+
+// ---------- camera (live) ----------
+async function startCamera(){
+ stopAll();showHint('',TX.loading,true);
+ try{
+  try{await setMode('VIDEO')}catch(e){console.warn(e);lmk=null;loadingLmk=null;showHint(TX.h1,TX.loadfail);stopAll(true);return}
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false});
+  vid.srcObject=stream;await vid.play();
+ }catch(e){console.warn(e);showHint(TX.h1,TX.camfail);stopAll(true);return}
+ mode='live';samples=[];hint.hidden=true;$('bStop').hidden=false;$('bCam').hidden=true;
+ cv.width=vid.videoWidth||960;cv.height=vid.videoHeight||720;
+ let last=-1;
+ const loop=()=>{
+  if(mode!=='live')return;
+  raf=requestAnimationFrame(loop);
+  if(vid.currentTime===last)return;last=vid.currentTime;
+  ctx.save();ctx.translate(cv.width,0);ctx.scale(-1,1);ctx.drawImage(vid,0,0,cv.width,cv.height);ctx.restore();
+  let res=null;try{res=lmk.detectForVideo(vid,performance.now())}catch(e){}
+  const l=res&&res.faceLandmarks&&res.faceLandmarks[0];
+  if(!l){setBadge(TX.noface);return}
+  if(!faceKey||samples.length<22){
+   const m=metrics(l,cv.width,cv.height);
+   if(m.asym<.09&&m.roll<12){samples.push(m)}
+   if(!faceKey){setBadge(samples.length<22?TX.hold:'',samples.length/22);if(samples.length>=22){const ag=aggregate(samples);face=ag;renderMeter(ag);setFace(classify(ag),false);setBadge('')}}
+  }else setBadge('');
+  overlay(ctx,l,cv.width,cv.height,true);
+ };
+ loop();
+}
+function stopAll(keepHint){
+ mode=mode==='photo'?'photo':'none';cancelAnimationFrame(raf);
+ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+ vid.srcObject=null;$('bStop').hidden=true;$('bCam').hidden=false;setBadge('');
+ if(!keepHint&&mode==='none')showHint(TX.h1,TX.h2);
+}
+$('bCam').onclick=()=>{faceKey=null;face=null;$('resCard').hidden=true;mode='none';startCamera()};
+$('bStop').onclick=()=>{mode='none';stopAll()};
+
+// ---------- photo ----------
+$('bPhoto').onclick=()=>$('file').click();
+$('file').onchange=async e=>{
+ const f=e.target.files&&e.target.files[0];if(!f)return;e.target.value='';
+ mode='none';stopAll(true);showHint('',TX.loading,true);
+ try{
+  const url=URL.createObjectURL(f);
+  const im=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+  const sc=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight));
+  const W=Math.round(im.naturalWidth*sc),H=Math.round(im.naturalHeight*sc);
+  const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,0,0,W,H);URL.revokeObjectURL(url);
+  let L;try{L=await setMode('IMAGE')}catch(e){console.warn(e);lmk=null;loadingLmk=null;showHint(TX.h1,TX.loadfail);return}
+  const res=L.detect(c);const l=res.faceLandmarks&&res.faceLandmarks[0];
+  if(!l){showHint(TX.h1,TX.noface);return}
+  still=c;stillLm=l;cv.width=W;cv.height=H;mode='photo';hint.hidden=true;
+  const m=metrics(l,W,H);face=m;renderMeter(m);
+  setFace(classify(m),false);
+  if(m.asym>.12||m.roll>14)setBadge(TX.turned);else setBadge('');
+ }catch(err){console.warn(err);showHint(TX.h1,TX.noface)}
+};
+
+buildShapes();buildColors();
+renderAvail();
+window.__ff={classify,metrics,setFace,get shape(){return curShape},set shape(v){curShape=v;buildShapes();renderAvail();redraw()},set color(v){curColor=v;buildColors();redraw()},byShape,getLmk,setStill(c,l){still=c;stillLm=l;cv.width=c.width;cv.height=c.height;mode='photo';hint.hidden=true;const m=metrics(l,c.width,c.height);face=m;renderMeter(m);setFace(classify(m),false);return m}};
+</script>
+</body></html>
