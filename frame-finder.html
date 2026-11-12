@@ -34,8 +34,8 @@ button:focus-visible,.btn:focus-visible,.tile:focus-visible,.chip:focus-visible{
 .chip{font:inherit;font-size:12.5px;letter-spacing:0;padding:6px 10px;background:transparent;color:var(--ink);border:1px solid var(--line)}
 .chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 .small{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.5}
-.shapes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-@media(max-width:520px){.shapes{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.shapes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media(max-width:520px){.tile span{font-size:10.5px}}
 .tile{position:relative;background:var(--card);border:1px solid var(--line);padding:8px 4px 8px;cursor:pointer;text-align:center;font:inherit;color:inherit;letter-spacing:0}
 .tile[aria-pressed=true]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .tile canvas{width:100%;height:44px;display:block}
@@ -100,6 +100,9 @@ button:focus-visible,.btn:focus-visible,.tile:focus-visible,.chip:focus-visible{
         <div class="shapes" id="shapes"></div>
         <div class="legend"><span><i class="star">★</i><span id="lg1"></span></span><span><i class="dot"></i><span id="lg2"></span></span><span><i class="dot no"></i><span id="lg3"></span></span></div>
         <div class="colors" id="colors"><span class="small" id="t_color" style="margin:0"></span></div>
+        <div class="colors" id="lens"><span class="small" id="t_lens" style="margin:0"></span></div>
+        <p class="small" id="lensNote"></p>
+        <p class="small" id="shapeDesc" style="color:var(--ink);font-size:13px"></p>
       </div>
     </div>
   </div>
@@ -110,7 +113,7 @@ button:focus-visible,.btn:focus-visible,.tile:focus-visible,.chip:focus-visible{
 <script type="module">
 const WA='201110255528', SITE='https://www.luxury-optics.com';
 const IMG={C:'https://cdn.ososs.com/public/upload/companies/5307/products/',S:'https://zfloos-production-storage.s3.eu-central-1.amazonaws.com/public/upload/companies/5307/products/'};
-const PRODUCTS=[{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435430","host":"C","file":"917944043816af4701d4ad4e3_01565596_c_f5efea-525148-f3ede9_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435431","host":"C","file":"717944045516af470c76bf874_80091127_c_f5efea-755045-724d43_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG2051S","slug":"gg2051s-3435433","host":"C","file":"317944880346af5b6e2522830_75796196_c_f5efea-f3efea-454342_thumbnail.webp"},{"shape":"geometric","brand":"Gucci","name":"GG2050S","slug":"gg2050s-3435432","host":"S","file":"889652626253-cat-xl_c_ffffff-fffffd-66666b_thumbnail.webp"},{"shape":"rectangle","brand":"Gucci","name":"GG1703S","slug":"gg1703s-3435429","host":"C","file":"317944047226af47172328587_79924366_c_f5efea-6b5236-6c5337_thumbnail.webp"},{"shape":"square","brand":"Gucci","name":"GG2152S","slug":"gg2152s-3435434","host":"C","file":"817944046336af47119a6e8e4_52856894_c_f5efea-65423a-66433b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435425","host":"S","file":"889652621920-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435426","host":"S","file":"889652621951-cat-xl_c_ffffff-516057-fffffd_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435427","host":"S","file":"889652621968-cat-xl_c_ffffff-4b4b4b-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0533O","slug":"pu0533o-3435424","host":"S","file":"889652621784-cat-xl_c_ffffff-fefefe-fdfdfd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435377","host":"S","file":"603429079796-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435378","host":"S","file":"603429079826-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0668S","slug":"mj0668s-3435379","host":"S","file":"603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435412","host":"S","file":"889652536712-cat-xl_c_ffffff-424242-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435413","host":"C","file":"889652536729-cat-xl_c_ffffff-484a49-fdffff.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0507O","slug":"pu0507o-3435416","host":"S","file":"889652563770-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0509O","slug":"pu0509o-3435417","host":"S","file":"889652564685-cat-xl_c_ffffff-fffffd-a5a6a3_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0485O","slug":"pu0485o-3435403","host":"S","file":"889652538464-cat-xl_c_ffffff-fdfdfd-fdffff_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0451O","slug":"pu0451o-3435397","host":"S","file":"889652481968-cat-xl_c_ffffff-fcfbfc-fdffff_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0434O","slug":"pu0434o-3435391","host":"S","file":"889652436999-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0511O","slug":"pu0511o-3435419","host":"C","file":"889652563886-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"rectangle","brand":"Puma","name":"PU0510O","slug":"pu0510o-3435418","host":"C","file":"889652564616-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"rectangle","brand":"Maui Jim","name":"MJ0655SA","slug":"mj0655sa-3435376","host":"S","file":"603429075767-cat-xl_c_ffffff-262626-fefefe_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435408","host":"S","file":"889652536323-cat-xl_c_ffffff-464d4d-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435409","host":"S","file":"889652536347-cat-xl_c_ffffff-384661-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435394","host":"S","file":"889652493749-cat-xl_c_ffffff-3f4646-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435393","host":"S","file":"889652493725-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0484S","slug":"pu0484s-3435402","host":"S","file":"889652536446-cat-xl_c_ffffff-424242-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0499SA","slug":"pu0499sa-3435411","host":"S","file":"889652563657-cat-xl_c_ffffff-465656-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435414","host":"C","file":"889652536835-cat-xl_c_ffffff-37526b-fdffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435415","host":"C","file":"889652536842-cat-xl_c_ffffff-53534f-fffffd.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0515S","slug":"pu0515s-3435421","host":"C","file":"889652564104-cat-xl_c_fefefe-7f7149-ffffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0478SA","slug":"pu0478sa-3435400","host":"S","file":"889652482545-cat-xl_c_ffffff-5a6062-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0479SA","slug":"pu0479sa-3435401","host":"S","file":"889652482606-cat-xl_c_ffffff-816455-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0674S","slug":"mj0674s-3435380","host":"S","file":"603429080075-cat-xl_c_ffffff-fffffd-666666_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0675S","slug":"mj0675s-3435381","host":"S","file":"603429080129-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0728S","slug":"mj0728s-3435384","host":"S","file":"603429036539-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0886S","slug":"mj0886s-3435385","host":"S","file":"603429072414-cat-xl_c_ffffff-fffffd-806d56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0589S","slug":"mj0589s-3435372","host":"S","file":"603429084257-cat-xl_c_ffffff-646464-828282_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435373","host":"S","file":"603429073299-cat-xl_c_ffffff-806a56-fffffd_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435374","host":"S","file":"603429073305-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0620S","slug":"mj0620s-3435375","host":"S","file":"603429076825-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0327S","slug":"mj0327s-3435370","host":"S","file":"603429018818-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0421S","slug":"mj0421s-3435371","host":"S","file":"603429015527-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"browline","brand":"Puma","name":"PU0472O","slug":"pu0472o-3435398","host":"S","file":"889652482323-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"browline","brand":"Puma","name":"PU0411O","slug":"pu0411o-3435389","host":"S","file":"889652436500-cat-xl_c_ffffff-fffffd-fefefe_thumbnail.webp"},{"shape":"browline","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435382","host":"S","file":"603429082055-cat-xl_c_ffffff-626262-7f7f7f_thumbnail.webp"},{"shape":"browline","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435383","host":"S","file":"603429082062-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"}];
+const PRODUCTS=[{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435430","host":"C","file":"917944043816af4701d4ad4e3_01565596_c_f5efea-525148-f3ede9_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG1829SK","slug":"gg1829sk-3435431","host":"C","file":"717944045516af470c76bf874_80091127_c_f5efea-755045-724d43_thumbnail.webp"},{"shape":"oval","brand":"Gucci","name":"GG2051S","slug":"gg2051s-3435433","host":"C","file":"317944880346af5b6e2522830_75796196_c_f5efea-f3efea-454342_thumbnail.webp"},{"shape":"fullVue","brand":"Gucci","name":"GG2050S","slug":"gg2050s-3435432","host":"S","file":"889652626253-cat-xl_c_ffffff-fffffd-66666b_thumbnail.webp"},{"shape":"square","brand":"Gucci","name":"GG1703S","slug":"gg1703s-3435429","host":"C","file":"317944047226af47172328587_79924366_c_f5efea-6b5236-6c5337_thumbnail.webp"},{"shape":"square","brand":"Gucci","name":"GG2152S","slug":"gg2152s-3435434","host":"C","file":"817944046336af47119a6e8e4_52856894_c_f5efea-65423a-66433b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435425","host":"S","file":"889652621920-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435426","host":"S","file":"889652621951-cat-xl_c_ffffff-516057-fffffd_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0535S","slug":"pu0535s-3435427","host":"S","file":"889652621968-cat-xl_c_ffffff-4b4b4b-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0533O","slug":"pu0533o-3435424","host":"S","file":"889652621784-cat-xl_c_ffffff-fefefe-fdfdfd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435377","host":"S","file":"603429079796-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0667S","slug":"mj0667s-3435378","host":"S","file":"603429079826-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"round","brand":"Maui Jim","name":"MJ0668S","slug":"mj0668s-3435379","host":"S","file":"603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435412","host":"S","file":"889652536712-cat-xl_c_ffffff-424242-fefefe_thumbnail.webp"},{"shape":"round","brand":"Puma","name":"PU0500SA","slug":"pu0500sa-3435413","host":"C","file":"889652536729-cat-xl_c_ffffff-484a49-fdffff.webp"},{"shape":"square","brand":"Puma","name":"PU0507O","slug":"pu0507o-3435416","host":"S","file":"889652563770-cat-xl_c_ffffff-fdffff-fffffd_thumbnail.webp"},{"shape":"square","brand":"Puma","name":"PU0509O","slug":"pu0509o-3435417","host":"S","file":"889652564685-cat-xl_c_ffffff-fffffd-a5a6a3_thumbnail.webp"},{"shape":"square","brand":"Puma","name":"PU0485O","slug":"pu0485o-3435403","host":"S","file":"889652538464-cat-xl_c_ffffff-fdfdfd-fdffff_thumbnail.webp"},{"shape":"square","brand":"Puma","name":"PU0451O","slug":"pu0451o-3435397","host":"S","file":"889652481968-cat-xl_c_ffffff-fcfbfc-fdffff_thumbnail.webp"},{"shape":"square","brand":"Puma","name":"PU0434O","slug":"pu0434o-3435391","host":"S","file":"889652436999-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"square","brand":"Puma","name":"PU0511O","slug":"pu0511o-3435419","host":"C","file":"889652563886-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"square","brand":"Puma","name":"PU0510O","slug":"pu0510o-3435418","host":"C","file":"889652564616-cat-xl_c_ffffff-fffffd-fdffff.webp"},{"shape":"square","brand":"Maui Jim","name":"MJ0655SA","slug":"mj0655sa-3435376","host":"S","file":"603429075767-cat-xl_c_ffffff-262626-fefefe_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435408","host":"S","file":"889652536323-cat-xl_c_ffffff-464d4d-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0494S","slug":"pu0494s-3435409","host":"S","file":"889652536347-cat-xl_c_ffffff-384661-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435394","host":"S","file":"889652493749-cat-xl_c_ffffff-3f4646-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0442S","slug":"pu0442s-3435393","host":"S","file":"889652493725-cat-xl_c_ffffff-3f4646-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0484S","slug":"pu0484s-3435402","host":"S","file":"889652536446-cat-xl_c_ffffff-424242-fdffff_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0499SA","slug":"pu0499sa-3435411","host":"S","file":"889652563657-cat-xl_c_ffffff-465656-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435414","host":"C","file":"889652536835-cat-xl_c_ffffff-37526b-fdffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0502SA","slug":"pu0502sa-3435415","host":"C","file":"889652536842-cat-xl_c_ffffff-53534f-fffffd.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0515S","slug":"pu0515s-3435421","host":"C","file":"889652564104-cat-xl_c_fefefe-7f7149-ffffff.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0478SA","slug":"pu0478sa-3435400","host":"S","file":"889652482545-cat-xl_c_ffffff-5a6062-fffffd_thumbnail.webp"},{"shape":"wayfarer","brand":"Puma","name":"PU0479SA","slug":"pu0479sa-3435401","host":"S","file":"889652482606-cat-xl_c_ffffff-816455-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0674S","slug":"mj0674s-3435380","host":"S","file":"603429080075-cat-xl_c_ffffff-fffffd-666666_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0675S","slug":"mj0675s-3435381","host":"S","file":"603429080129-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0728S","slug":"mj0728s-3435384","host":"S","file":"603429036539-cat-xl_c_ffffff-fffffd-806a56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0886S","slug":"mj0886s-3435385","host":"S","file":"603429072414-cat-xl_c_ffffff-fffffd-806d56_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0589S","slug":"mj0589s-3435372","host":"S","file":"603429084257-cat-xl_c_ffffff-646464-828282_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435373","host":"S","file":"603429073299-cat-xl_c_ffffff-806a56-fffffd_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0605S","slug":"mj0605s-3435374","host":"S","file":"603429073305-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0620S","slug":"mj0620s-3435375","host":"S","file":"603429076825-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0327S","slug":"mj0327s-3435370","host":"S","file":"603429018818-cat-xl_c_ffffff-6c6c6c-8b8b8b_thumbnail.webp"},{"shape":"aviator","brand":"Maui Jim","name":"MJ0421S","slug":"mj0421s-3435371","host":"S","file":"603429015527-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"},{"shape":"clubmaster","brand":"Puma","name":"PU0472O","slug":"pu0472o-3435398","host":"S","file":"889652482323-cat-xl_c_ffffff-fcfbfc-fefefe_thumbnail.webp"},{"shape":"clubmaster","brand":"Puma","name":"PU0411O","slug":"pu0411o-3435389","host":"S","file":"889652436500-cat-xl_c_ffffff-fffffd-fefefe_thumbnail.webp"},{"shape":"clubmaster","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435382","host":"S","file":"603429082055-cat-xl_c_ffffff-626262-7f7f7f_thumbnail.webp"},{"shape":"clubmaster","brand":"Maui Jim","name":"MJ0695S","slug":"mj0695s-3435383","host":"S","file":"603429082062-cat-xl_c_ffffff-fffffd-fdffff_thumbnail.webp"}];
 
 // ---------- language ----------
 let lang='en';
@@ -120,47 +123,67 @@ else{try{lang=(window.parent.document.documentElement.lang||'').slice(0,2)||'en'
 if(lang!=='ar')lang='en';
 const AR=lang==='ar';
 
-const SH={ // frame shapes: names and short style notes
- round:{en:'Round',ar:'دائري'},oval:{en:'Oval',ar:'بيضاوي'},square:{en:'Square',ar:'مربع'},rectangle:{en:'Rectangle',ar:'مستطيل'},
- wayfarer:{en:'Wayfarer',ar:'وايفرر'},aviator:{en:'Aviator',ar:'أفييتر'},browline:{en:'Browline',ar:'براوالاين'},
- catEye:{en:'Cat-eye',ar:'كات آي'},geometric:{en:'Geometric',ar:'هندسي'},oversized:{en:'Oversized',ar:'كبير (أوفرسايز)'}
+const SH={
+ round:{en:'Round Eye',ar:'دائري (Round)'},oval:{en:'Oval',ar:'بيضاوي (Oval)'},square:{en:'Square',ar:'مربع (Square)'},
+ wayfarer:{en:'Wayfarer',ar:'وايفرر'},aviator:{en:'Aviator',ar:'أفييتر'},pilot:{en:'Pilot',ar:'بايلوت'},
+ clubmaster:{en:'Clubmaster',ar:'كلوب ماستر'},pantos:{en:'Pantos',ar:'بانتوس'},catEye:{en:'Cat Eye',ar:'كات آي'},
+ butterfly:{en:'Butterfly',ar:'فراشة (Butterfly)'},heart:{en:'Heart',ar:'قلب (Heart)'},fullVue:{en:'Full Vue',ar:'فل فيو'},
+ wrap:{en:'Wrap',ar:'راب (Wrap)'},biker:{en:'Biker',ar:'بايكر'},shield:{en:'Shield',ar:'شيلد (Shield)'},goggles:{en:'Goggles',ar:'جوجلز (Goggles)'}
 };
-const SHAPE_ORDER=['round','oval','square','rectangle','wayfarer','aviator','browline','catEye','geometric','oversized'];
+const SD={
+ round:{en:'Circular lenses and frame. A classic retro look.',ar:'عدسات وإطار دائريين. شكل كلاسيكي ريترو.'},
+ oval:{en:'Softly curved oval lenses. Popular in every size, colour and material.',ar:'عدسات بيضاوية بخطوط ناعمة. منتشر بكل المقاسات والألوان والخامات.'},
+ square:{en:'Squared lenses in many sizes, colours and materials. Rectangular styles are shown here too.',ar:'عدسات مربعة بمقاسات وألوان وخامات كثيرة. الإطارات المستطيلة تظهر هنا أيضاً.'},
+ wayfarer:{en:'A medium squared shape with a thick frame. An icon since the 1950s.',ar:'شكل مربع متوسط بإطار سميك. أيقونة منذ الخمسينات.'},
+ aviator:{en:'Teardrop lenses with a thin metal frame and double bridge. Originally made for pilots.',ar:'عدسات بشكل قطرة بإطار معدني رفيع وجسر مزدوج. صُمّم أصلاً للطيارين.'},
+ pilot:{en:'Pilot-style frames from the aviator family, often larger and squarer.',ar:'إطارات بستايل الطيارين من عائلة الأفييتر، غالباً أكبر وأكثر تربيعاً.'},
+ clubmaster:{en:'A bold upper bar frames the lens like an eyebrow, with a thinner lower rim.',ar:'قضيب علوي سميك يحيط بالعدسة مثل الحاجب، مع حافة سفلية أرفع.'},
+ pantos:{en:'A round vintage shape with a keyhole bridge, usually in thick acetate.',ar:'شكل دائري قديم بجسر على شكل ثقب المفتاح، غالباً من الأسيتات السميك.'},
+ catEye:{en:'Upswept outer corners and a rounded bottom.',ar:'زوايا خارجية مرفوعة للأعلى وقاع مستدير.'},
+ butterfly:{en:'Large lenses with a wing-like upswept shape.',ar:'عدسات كبيرة بشكل يشبه أجنحة الفراشة.'},
+ heart:{en:'Playful heart-shaped lenses.',ar:'عدسات بشكل قلب، لإطلالة مرحة.'},
+ fullVue:{en:'A thin wire or partly rimless frame. Light and minimal.',ar:'إطار سلكي رفيع أو نصف بدون إطار. خفيف وبسيط.'},
+ wrap:{en:'Curves around the face with wide lenses for coverage.',ar:'يلتف حول الوجه بعدسات عريضة لتغطية أكبر.'},
+ biker:{en:'A chunky wrap style made for riding in bright, windy conditions.',ar:'ستايل راب سميك مخصص لركوب الدراجات في الشمس والهواء.'},
+ shield:{en:'One wide lens across both eyes. A sporty look.',ar:'عدسة واحدة عريضة تغطي العينين. إطلالة رياضية.'},
+ goggles:{en:'Protective eyewear sealed around the eyes, for sports like skiing.',ar:'نظارات واقية محكمة حول العينين، للرياضات مثل التزلج.'}
+};
+const SHAPE_ORDER=['round','oval','square','wayfarer','aviator','pilot','clubmaster','pantos','catEye','butterfly','heart','fullVue','wrap','biker','shield','goggles'];
 const FACE={
  oval:{en:'Oval',ar:'بيضاوي',
   d_en:'Balanced proportions: the face is a little longer than it is wide, with a softly rounded jaw. Most frame shapes suit it.',
   d_ar:'نسب متوازنة: الوجه أطول قليلاً من عرضه مع فك مستدير بلطف. معظم أشكال الإطارات تناسبه.',
-  rec:['aviator','wayfarer','square','geometric','catEye'],
-  w_en:'Most shapes work, so choose by style. Square, aviator and geometric frames add definition.',
-  w_ar:'أغلب الأشكال تناسبك، فاختر حسب ذوقك. الإطارات المربعة والأفييتر والهندسية تعطي حضوراً أوضح.'},
+  rec:['wayfarer','aviator','square','clubmaster','catEye'],
+  w_en:'Most shapes work, so choose by style. Square, aviator and clubmaster frames add definition.',
+  w_ar:'أغلب الأشكال تناسبك، فاختر حسب ذوقك. الإطارات المربعة والأفييتر والكلوب ماستر تعطي حضوراً أوضح.'},
  round:{en:'Round',ar:'دائري',
   d_en:'Face length and width are close, with soft curves and no strong angles.',
   d_ar:'طول الوجه وعرضه متقاربان، بخطوط ناعمة وبدون زوايا حادة.',
-  rec:['rectangle','square','wayfarer','browline','geometric'],
+  rec:['square','wayfarer','clubmaster','pilot'],
   w_en:'Angular frames add structure and make the face look a little longer.',
   w_ar:'الإطارات ذات الزوايا تضيف بنية للوجه وتعطي إحساساً بطول أكبر.'},
  square:{en:'Square',ar:'مربع',
   d_en:'Forehead, cheeks and jaw are about the same width, with a strong jawline.',
   d_ar:'الجبهة والخدان والفك بعرض متقارب تقريباً، مع خط فك واضح.',
-  rec:['round','oval','aviator','catEye'],
+  rec:['round','oval','aviator','pantos','catEye'],
   w_en:'Rounded and curved frames soften a strong jawline.',
   w_ar:'الإطارات المستديرة والمنحنية تلطّف خط الفك القوي.'},
  heart:{en:'Heart',ar:'قلب',
   d_en:'A wider forehead that narrows toward the chin.',
   d_ar:'جبهة أعرض تضيق باتجاه الذقن.',
-  rec:['oval','round','aviator','rectangle'],
+  rec:['oval','round','aviator','pantos'],
   w_en:'Frames that are lighter on top or wider at the bottom balance a wide forehead.',
   w_ar:'الإطارات الأخف من الأعلى أو الأعرض من الأسفل توازن الجبهة العريضة.'},
  oblong:{en:'Long',ar:'طويل',
   d_en:'The face is clearly longer than it is wide, with a straight cheek line.',
   d_ar:'الوجه أطول بوضوح من عرضه مع خط خدود مستقيم.',
-  rec:['oversized','square','wayfarer','round','aviator'],
+  rec:['butterfly','square','wayfarer','round','pilot'],
   w_en:'Taller and wider frames add width and shorten the look of the face.',
   w_ar:'الإطارات الأطول والأعرض تضيف عرضاً وتقصّر مظهر الوجه.'},
  diamond:{en:'Diamond',ar:'ماسي',
   d_en:'The cheekbones are the widest part, with a narrower forehead and jaw.',
   d_ar:'عظام الخدين هي الأعرض، مع جبهة وفك أضيق.',
-  rec:['catEye','oval','browline','round'],
+  rec:['catEye','oval','clubmaster','round'],
   w_en:'Frames that are wide on top or oval in shape highlight the cheekbones.',
   w_ar:'الإطارات العريضة من الأعلى أو البيضاوية تبرز عظام الخدين.'}
 };
@@ -176,7 +199,7 @@ const TX={
   resEy:'Your face shape (approximate)',notRight:'Not right? Pick the one that looks most like you:',
   meterLen:'Length to width',meterFore:'Forehead to cheeks',meterJaw:'Jaw to cheeks',
   pick:'Try frame shapes',lg1:'Suggested for you',lg2:'In our store',lg3:'Not available now',color:'Frame colour',
-  black:'Black',tortoise:'Tortoise',gold:'Gold',
+  black:'Black',tortoise:'Tortoise',gold:'Gold',lens:'Lenses',lensStd:'Standard',lensMir:'Mirrored',lensPol:'Polarized',lensNote:'Mirrored and polarized describe the lens, not the frame shape. Ask us which of our frames come with them.',
   avail:s=>`${s} frames at Luxury Optics`,availSub:'Tap a frame to open its page.',view:'View frame',ask:'Ask on WhatsApp',
   none:'This frame shape is not available at the moment.',
   noneP:'Message us on WhatsApp and we will suggest frames we have in the shop that suit you.',
@@ -195,7 +218,7 @@ const TX={
   resEy:'شكل وجهك (تقريبي)',notRight:'مش مضبوط؟ اختر الشكل الأقرب لوجهك:',
   meterLen:'الطول إلى العرض',meterFore:'الجبهة إلى الخدين',meterJaw:'الفك إلى الخدين',
   pick:'جرّب أشكال الإطارات',lg1:'مقترح لك',lg2:'متوفر في المحل',lg3:'غير متوفر حالياً',color:'لون الإطار',
-  black:'أسود',tortoise:'سلحفاة',gold:'ذهبي',
+  black:'أسود',tortoise:'سلحفاة',gold:'ذهبي',lens:'العدسات',lensStd:'عادية',lensMir:'مرايا (Mirrored)',lensPol:'مستقطبة (Polarized)',lensNote:'المرايا والمستقطبة هي نوع العدسة وليست شكل الإطار. اسألنا أي نظارات عندنا فيها هالميزة.',
   avail:s=>`إطارات ${s} في Luxury Optics`,availSub:'اضغط على أي نظارة لفتح صفحتها.',view:'عرض المنتج',ask:'اسأل عبر واتساب',
   none:'هذا الشكل من الإطارات غير متوفر في الوقت الحالي.',
   noneP:'راسلنا على واتساب ونقترح عليك من نظاراتنا الموجودة في المحل ما يناسبك.',
@@ -209,34 +232,45 @@ document.documentElement.lang=lang;document.documentElement.dir=AR?'rtl':'ltr';d
 const $=id=>document.getElementById(id);
 $('t_title').textContent=TX.title;$('t_sub').textContent=TX.sub;$('t_priv').textContent=TX.priv;$('t_pick').textContent=TX.pick;
 $('bCam').textContent=TX.cam;$('bPhoto').textContent=TX.photo;$('bStop').textContent=TX.stop;
-$('lg1').textContent=TX.lg1;$('lg2').textContent=TX.lg2;$('lg3').textContent=TX.lg3;$('t_color').textContent=TX.color+':';
+$('lg1').textContent=TX.lg1;$('lg2').textContent=TX.lg2;$('lg3').textContent=TX.lg3;$('t_color').textContent=TX.color+':';$('t_lens').textContent=TX.lens+':';$('lensNote').textContent=TX.lensNote;
 $('t_resEy').textContent=TX.resEy;$('t_notRight').textContent=TX.notRight;$('t_disc').textContent=TX.disc;
 
 // ---------- store availability ----------
 const byShape={};for(const p of PRODUCTS){(byShape[p.shape]=byShape[p.shape]||[]).push(p)}
+byShape.pilot=byShape.aviator;
 const count=s=>(byShape[s]||[]).length;
 const prodUrl=p=>SITE+(AR?'':'/en')+'/products/'+p.slug;
 const waLink=txt=>'https://wa.me/'+WA+'?text='+encodeURIComponent(txt);
 
 // ---------- frame drawing (mm units, lens centred at 0,0) ----------
 const DIM={ // lens width, lens height, bridge (mm)
- round:[50,50,20],oval:[52,38,18],square:[50,46,19],rectangle:[54,34,18],wayfarer:[52,42,18],aviator:[58,50,14],
- browline:[52,40,19],catEye:[54,44,18],geometric:[52,42,18],oversized:[62,54,18]
+ round:[50,48,20],oval:[52,38,18],square:[50,44,19],wayfarer:[52,42,18],aviator:[58,50,14],pilot:[58,50,14],
+ clubmaster:[52,40,19],pantos:[48,44,20],catEye:[54,44,18],butterfly:[62,54,16],heart:[50,44,16],fullVue:[50,44,19],
+ wrap:[62,38,10],biker:[64,32,10]
 };
+const SINGLE={shield:[132,50],goggles:[138,56]};
 function rr(c,x,y,w,h,r){c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath()}
 function lensPath(c,s,w,h){ // outer side is +x
  c.beginPath();
  switch(s){
-  case 'round':case 'oval':c.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);break;
+  case 'round':case 'oval':case 'fullVue':c.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);break;
+  case 'pantos':c.moveTo(0,-h/2);c.bezierCurveTo(w*.34,-h/2,w/2,-h*.3,w/2,0);c.bezierCurveTo(w/2,h*.35,w*.3,h/2,0,h/2);c.bezierCurveTo(-w*.3,h/2,-w/2,h*.35,-w/2,0);c.bezierCurveTo(-w/2,-h*.3,-w*.34,-h/2,0,-h/2);c.closePath();break;
   case 'square':rr(c,-w/2,-h/2,w,h,h*.14);break;
-  case 'rectangle':rr(c,-w/2,-h/2,w,h,h*.16);break;
   case 'wayfarer':c.moveTo(-w/2,-h/2+2);c.quadraticCurveTo(0,-h/2-3,w/2,-h/2-1);c.quadraticCurveTo(w/2+1,-h/2+2,w/2-1,-h/2+8);c.lineTo(w/2-5,h/2-7);c.quadraticCurveTo(w/2-6,h/2,w/2-14,h/2);c.lineTo(-w/2+12,h/2);c.quadraticCurveTo(-w/2+2,h/2,-w/2+1,h/2-9);c.closePath();break;
   case 'aviator':c.moveTo(-w/2,-h/6);c.bezierCurveTo(-w/2,-h/2.05,w/2,-h/2.05,w/2,-h/6);c.bezierCurveTo(w/2,h/3,w/5,h/2,0,h/2);c.bezierCurveTo(-w/5,h/2,-w/2,h/3,-w/2,-h/6);c.closePath();break;
-  case 'browline':rr(c,-w/2,-h/2,w,h,h*.3);break;
+  case 'pilot':c.moveTo(-w/2,-h*.3);c.quadraticCurveTo(-w/2,-h/2,-w*.3,-h/2);c.lineTo(w*.3,-h/2);c.quadraticCurveTo(w/2,-h/2,w/2,-h*.25);c.bezierCurveTo(w/2,h*.25,w*.3,h/2,0,h/2);c.bezierCurveTo(-w*.3,h/2,-w/2,h*.25,-w/2,-h*.3);c.closePath();break;
+  case 'clubmaster':rr(c,-w/2,-h/2,w,h,h*.3);break;
   case 'catEye':c.moveTo(-w/2,-h*.08);c.bezierCurveTo(-w/2,-h*.42,-w*.08,-h*.44,w*.14,-h*.4);c.lineTo(w/2,-h*.58);c.bezierCurveTo(w*.54,-h*.1,w*.38,h*.42,0,h*.5);c.bezierCurveTo(-w*.3,h*.5,-w/2,h*.32,-w/2,-h*.08);c.closePath();break;
-  case 'geometric':c.moveTo(-w/2,0);c.lineTo(-w/4,-h/2);c.lineTo(w/4,-h/2);c.lineTo(w/2,0);c.lineTo(w/4,h/2);c.lineTo(-w/4,h/2);c.closePath();break;
-  case 'oversized':c.moveTo(-w/2,-h/4);c.quadraticCurveTo(-w/2,-h/2,-w/4,-h/2);c.lineTo(w/3,-h/2);c.quadraticCurveTo(w/2,-h/2,w/2,-h/3);c.lineTo(w/2,h/6);c.quadraticCurveTo(w/2,h/2,w/5,h/2);c.lineTo(-w/4,h/2);c.quadraticCurveTo(-w/2,h/2,-w/2,h/6);c.closePath();break;
+  case 'butterfly':c.moveTo(-w/2,-h*.05);c.bezierCurveTo(-w/2,-h*.5,-w*.05,-h*.52,w*.2,-h*.48);c.bezierCurveTo(w/2,-h*.58,w*.56,-h*.1,w*.45,h*.2);c.bezierCurveTo(w*.35,h*.5,w*.1,h*.5,0,h*.5);c.bezierCurveTo(-w*.3,h*.5,-w/2,h*.3,-w/2,-h*.05);c.closePath();break;
+  case 'heart':c.moveTo(0,-h*.22);c.bezierCurveTo(-w*.08,-h*.55,-w/2,-h*.55,-w/2,-h*.1);c.bezierCurveTo(-w/2,h*.25,-w*.15,h*.4,0,h*.5);c.bezierCurveTo(w*.15,h*.4,w/2,h*.25,w/2,-h*.1);c.bezierCurveTo(w/2,-h*.55,w*.08,-h*.55,0,-h*.22);c.closePath();break;
+  case 'wrap':c.moveTo(-w/2,-h*.45);c.lineTo(w/2-4,-h*.5);c.quadraticCurveTo(w/2+1,-h*.5,w/2,-h*.1);c.quadraticCurveTo(w*.4,h/2,w*.05,h/2);c.quadraticCurveTo(-w/2,h*.5,-w/2,-h*.45);c.closePath();break;
+  case 'biker':c.moveTo(-w/2,-h*.4);c.quadraticCurveTo(0,-h*.62,w/2-3,-h*.5);c.quadraticCurveTo(w/2+1,-h*.45,w/2,-h*.05);c.quadraticCurveTo(w*.42,h/2,w*.1,h/2);c.lineTo(-w/2+6,h*.42);c.quadraticCurveTo(-w/2,h*.2,-w/2,-h*.4);c.closePath();break;
  }
+}
+function singlePath(c,s,w,h){
+ const hw=w/2,hh=h/2;c.beginPath();
+ if(s==='shield'){c.moveTo(-hw,-hh);c.lineTo(hw,-hh);c.lineTo(hw,hh*.3);c.quadraticCurveTo(hw-2,hh,hw-14,hh);c.lineTo(14,hh);c.quadraticCurveTo(8,hh,6,hh*.35);c.lineTo(-6,hh*.35);c.quadraticCurveTo(-8,hh,-14,hh);c.lineTo(-hw+14,hh);c.quadraticCurveTo(-hw+2,hh,-hw,hh*.3);c.closePath()}
+ else{c.moveTo(-hw+10,-hh);c.lineTo(hw-10,-hh);c.quadraticCurveTo(hw,-hh,hw,-hh+12);c.lineTo(hw,hh-14);c.quadraticCurveTo(hw,hh,hw-12,hh);c.lineTo(14,hh);c.quadraticCurveTo(6,hh,6,hh*.4);c.lineTo(-6,hh*.4);c.quadraticCurveTo(-6,hh,-14,hh);c.lineTo(-hw+12,hh);c.quadraticCurveTo(-hw,hh,-hw,hh-14);c.lineTo(-hw,-hh+12);c.quadraticCurveTo(-hw,-hh,-hw+10,-hh);c.closePath()}
 }
 const COL={
  black:{stroke:'#121212',th:4.4,metal:false},
@@ -247,42 +281,56 @@ function strokeFor(c,key,x0,y0,x1,y1){
  if(key==='tortoise'){const g=c.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'#4a2410');g.addColorStop(.35,'#8a5527');g.addColorStop(.6,'#3b1c0b');g.addColorStop(1,'#7a4a20');return g}
  return COL[key].stroke;
 }
+function lensFill(c,h,icon){
+ if(icon)return 'rgba(120,110,95,.16)';
+ const lg=c.createLinearGradient(0,-h/2,0,h/2);
+ if(curLens==='mirrored'){lg.addColorStop(0,'rgba(215,225,235,.88)');lg.addColorStop(.55,'rgba(120,150,175,.82)');lg.addColorStop(1,'rgba(70,90,115,.86)')}
+ else if(curLens==='polarized'){lg.addColorStop(0,'rgba(34,42,36,.8)');lg.addColorStop(1,'rgba(18,24,20,.64)')}
+ else{lg.addColorStop(0,'rgba(25,25,28,.52)');lg.addColorStop(1,'rgba(25,25,28,.30)')}
+ return lg;
+}
+function templeColor(key){return key==='tortoise'?'#5a3015':(key==='gold'?'#C9A24D':'#161616')}
+function drawSingle(c,shape,key,opt){
+ const [w,h]=SINGLE[shape],col=COL[key],th=col.th*(shape==='goggles'?1.5:1.1);
+ if(!opt.icon){for(const sx of [-1,1]){c.beginPath();c.moveTo(sx*(w/2-1),-h*.15);c.lineTo(sx*(w/2+(shape==='goggles'?12:30)),-h*.1+3);c.lineWidth=shape==='goggles'?th*1.6:th*.8;c.strokeStyle=shape==='goggles'?'#2a2a2a':templeColor(key);c.globalAlpha=.9;c.stroke();c.globalAlpha=1}}
+ singlePath(c,shape,w,h);c.fillStyle=lensFill(c,h,opt.icon);c.fill();
+ if(!opt.icon){c.save();singlePath(c,shape,w,h);c.clip();c.globalAlpha=.16;c.fillStyle='#fff';c.beginPath();c.moveTo(-w/2,-h/2);c.lineTo(-w*.25,-h/2);c.lineTo(-w*.33,h/2);c.lineTo(-w/2,h/2);c.closePath();c.fill();c.restore()}
+ singlePath(c,shape,w,h);c.lineWidth=th;c.strokeStyle=strokeFor(c,key,-w/2,-h/2,w/2,h/2);c.stroke();
+}
 // draws a pair of lenses+bridge+stubs centred on (0,0), in mm; k = pixels per mm (already applied by caller transform)
 function drawFrame(c,shape,key,opt){
- const [w,h,br]=DIM[shape],cx=(w+br)/2,col=COL[key],th=col.th*(shape==='oversized'?1.1:1);
  c.lineJoin='round';c.lineCap='round';
- // temples first (behind)
- const ty=-h*(shape==='catEye'?.42:.28);
- const tg=(sx)=>{const g=c.createLinearGradient(sx*(cx+w/2),0,sx*(cx+w/2+34),0);g.addColorStop(0,strokeFor(c,key,0,0,40,10)||'#111');g.addColorStop(1,'rgba(20,20,20,0)');return g};
- if(!opt.icon){for(const sx of [-1,1]){c.beginPath();c.moveTo(sx*(cx+w/2-1),ty);c.lineTo(sx*(cx+w/2+30),ty+3);c.lineWidth=col.metal?1.6:th*.8;c.strokeStyle=key==='tortoise'?'#5a3015':(key==='gold'?'#C9A24D':'#161616');c.globalAlpha=.9;c.stroke();c.globalAlpha=1}}
- // lenses
+ if(SINGLE[shape])return drawSingle(c,shape,key,opt);
+ const [w,h,br]=DIM[shape],cx=(w+br)/2,col=COL[key];
+ let th=col.th;if(shape==='biker')th*=1.5;else if(shape==='wrap')th*=1.2;else if(shape==='butterfly')th*=1.05;else if(shape==='fullVue')th=Math.min(th,1.3);
+ const thin=col.metal||shape==='fullVue';
+ const ty=-h*((shape==='catEye'||shape==='butterfly')?.4:.28);
+ if(!opt.icon){for(const sx of [-1,1]){c.beginPath();c.moveTo(sx*(cx+w/2-1),ty);c.lineTo(sx*(cx+w/2+30),ty+3);c.lineWidth=thin?1.6:th*.8;c.strokeStyle=templeColor(key);c.globalAlpha=.9;c.stroke();c.globalAlpha=1}}
  for(const sx of [-1,1]){
   c.save();c.translate(sx*cx,0);if(sx<0)c.scale(-1,1);
-  lensPath(c,shape,w,h);
-  const lg=c.createLinearGradient(0,-h/2,0,h/2);
-  if(opt.icon){c.fillStyle='rgba(120,110,95,.16)'}else{lg.addColorStop(0,'rgba(25,25,28,.52)');lg.addColorStop(1,'rgba(25,25,28,.30)');c.fillStyle=lg}
-  c.fill();
+  lensPath(c,shape,w,h);c.fillStyle=lensFill(c,h,opt.icon);c.fill();
   if(!opt.icon){c.save();lensPath(c,shape,w,h);c.clip();c.globalAlpha=.16;c.fillStyle='#fff';c.beginPath();c.moveTo(-w/2,-h/2);c.lineTo(-w*.1,-h/2);c.lineTo(-w*.45,h/2);c.lineTo(-w/2,h/2);c.closePath();c.fill();c.restore()}
-  if(shape==='browline'){ // thick brow bar
+  if(shape==='clubmaster'){
    c.save();lensPath(c,shape,w,h);c.clip();c.beginPath();c.rect(-w/2-2,-h/2-2,w+4,h*.34);c.fillStyle=strokeFor(c,key,-w/2,-h/2,w/2,0)||'#111';c.fill();c.restore();
    lensPath(c,shape,w,h);c.lineWidth=col.metal?th:1.6;c.strokeStyle=strokeFor(c,key,-w/2,-h/2,w/2,h/2);c.stroke();
   }else{lensPath(c,shape,w,h);c.lineWidth=th;c.strokeStyle=strokeFor(c,key,-w/2,-h/2,w/2,h/2);c.stroke()}
   c.restore();
  }
- // bridge
- c.beginPath();c.moveTo(-(cx-w/2),-h*.22);c.quadraticCurveTo(0,-h*(shape==='aviator'?.42:.36),cx-w/2,-h*.22);
- c.lineWidth=Math.max(col.metal?1.6:3,th*.7);c.strokeStyle=strokeFor(c,key,-10,0,10,0);c.stroke();
- if(shape==='aviator'){c.beginPath();c.moveTo(-cx,-h*.4);c.quadraticCurveTo(0,-h*.5,cx,-h*.4);c.lineWidth=1.5;c.stroke()}
+ const ah=(shape==='aviator'||shape==='pilot')?.42:(shape==='pantos'?.58:.36);
+ c.beginPath();c.moveTo(-(cx-w/2),-h*.22);c.quadraticCurveTo(0,-h*ah,cx-w/2,-h*.22);
+ c.lineWidth=Math.max(thin?1.6:3,th*.7);c.strokeStyle=strokeFor(c,key,-10,0,10,0);c.stroke();
+ if(shape==='aviator'||shape==='pilot'){c.beginPath();c.moveTo(-cx,-h*.4);c.quadraticCurveTo(0,-h*.5,cx,-h*.4);c.lineWidth=1.5;c.stroke()}
 }
 function drawIcon(cvs,shape){
  const dpr=Math.min(2,window.devicePixelRatio||1),W=cvs.clientWidth||90,H=cvs.clientHeight||44;
  cvs.width=W*dpr;cvs.height=H*dpr;const c=cvs.getContext('2d');c.scale(dpr,dpr);
- const [w,h,br]=DIM[shape],tot=w*2+br+6,k=Math.min(W/tot,H/(h+6));
+ let tot,hh;const S=SINGLE[shape];if(S){tot=S[0]+6;hh=S[1]+6}else{const [w,h,br]=DIM[shape];tot=w*2+br+6;hh=h+6}
+ const k=Math.min(W/tot,H/hh);
  c.translate(W/2,H/2);c.scale(k,k);drawFrame(c,shape,'black',{icon:true});
 }
 
 // ---------- state ----------
-let curShape='aviator',curColor='black',face=null,faceKey=null,mode='none'; // mode: none|live|photo
+let curShape='aviator',curColor='black',curLens='std',face=null,faceKey=null,mode='none'; // mode: none|live|photo
 let lmk=null,loadingLmk=null,stream=null,raf=0,still=null,stillLm=null,samples=[],busy=false;
 const cv=$('cv'),ctx=cv.getContext('2d'),vid=$('vid'),hint=$('hint'),badge=$('badge');
 function showHint(h,p,spin){hint.hidden=false;hint.innerHTML='';if(spin){const s=document.createElement('div');s.className='spin';hint.appendChild(s)}if(h){const b=document.createElement('b');b.textContent=h;hint.appendChild(b)}if(p){const s=document.createElement('div');s.textContent=p;hint.appendChild(s)}}
@@ -291,6 +339,7 @@ showHint(TX.h1,TX.h2);
 
 // ---------- shapes UI ----------
 function buildShapes(){
+ $('shapeDesc').textContent=SD[curShape][lang];
  const box=$('shapes');box.innerHTML='';
  const rec=faceKey?FACE[faceKey].rec:[];
  for(const s of SHAPE_ORDER){
@@ -307,6 +356,11 @@ function buildColors(){
  const box=$('colors');[...box.querySelectorAll('.sw')].forEach(n=>n.remove());
  const bg={black:'#121212',tortoise:'linear-gradient(135deg,#4a2410,#8a5527 45%,#3b1c0b)',gold:'#C9A24D'};
  for(const k of ['black','tortoise','gold']){const b=document.createElement('button');b.className='sw';b.type='button';b.style.background=bg[k];b.title=TX[k];b.setAttribute('aria-label',TX[k]);b.setAttribute('aria-pressed',String(k===curColor));b.onclick=()=>{curColor=k;buildColors();redraw()};box.appendChild(b)}
+}
+function buildLens(){
+ const box=$('lens');[...box.querySelectorAll('.chip')].forEach(n=>n.remove());
+ const L=[['std',TX.lensStd],['mirrored',TX.lensMir],['polarized',TX.lensPol]];
+ for(const [k,t] of L){const b=document.createElement('button');b.className='chip';b.type='button';b.textContent=t;b.setAttribute('aria-pressed',String(k===curLens));b.onclick=()=>{curLens=k;buildLens();redraw()};box.appendChild(b)}
 }
 function buildFaceChips(){
  const box=$('faceChips');box.innerHTML='';
@@ -480,7 +534,7 @@ $('file').onchange=async e=>{
  }catch(err){console.warn(err);showHint(TX.h1,TX.noface)}
 };
 
-buildShapes();buildColors();
+buildShapes();buildColors();buildLens();
 renderAvail();
 window.__ff={classify,metrics,setFace,get shape(){return curShape},set shape(v){curShape=v;buildShapes();renderAvail();redraw()},set color(v){curColor=v;buildColors();redraw()},byShape,getLmk,setStill(c,l){still=c;stillLm=l;cv.width=c.width;cv.height=c.height;mode='photo';hint.hidden=true;const m=metrics(l,c.width,c.height);face=m;renderMeter(m);setFace(classify(m),false);return m}};
 </script>
