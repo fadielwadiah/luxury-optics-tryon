@@ -480,7 +480,7 @@ function overlay(c,l,W,H,mir){
  const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
  let roll=Math.atan2(b.y-a.y,b.x-a.x);if(Math.abs(roll)>Math.PI/2)roll+=Math.PI;
  const e=P(234),g=P(454),n=P(1);
- const faceW=Math.hypot(g.x-e.x,g.y-e.y),k=.5*(Math.hypot(b.x-a.x,b.y-a.y)/63+faceW/150);
+ const faceW=Math.hypot(g.x-e.x,g.y-e.y),k=1.12*.5*(Math.hypot(b.x-a.x,b.y-a.y)/63+faceW/150);
  const dl=Math.hypot(n.x-e.x,n.y-e.y),dr=Math.hypot(g.x-n.x,g.y-n.y);
  const r=Math.max(-1,Math.min(1,(dl-dr)/(dl+dr)*1.5)),sx=Math.max(.55,Math.cos(Math.asin(r)));
  c.save();c.translate(mid.x,mid.y);c.rotate(roll);c.scale(sx*k,k);c.translate(0,1.5);
