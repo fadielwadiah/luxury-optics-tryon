@@ -72,12 +72,12 @@ button:focus-visible,.btn:focus-visible,.item:focus-visible{outline:2px solid va
 const WA='201110255528', SITE='https://www.luxury-optics.com';
 const IMG='https://cdn.ososs.com/public/upload/companies/5307/products/';
 const FR=[
- ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd','gg1829sk-001-front-v4.png','gg1829sk-001-side-v4.png'],
- ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd','gg1829sk-brown-front-v1.png','gg1829sk-brown-side-v1.png',{ss:1.088,center:1,bend:.014,tuck:2.4}],
- ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front-v4.png','gg2152s-side-v3.png'],
+ ['Gucci','GG1829SK','gg1829sk-3435430','889652525730-cat-xl_c_ffffff-5b5a52-fffffd','gg1829sk-001-front-v4.png','gg1829sk-001-side-v4.png',{depth:.8,at:.55,sl:'gg1829sk-001-sideL-v4.png'}],
+ ['Gucci','GG1829SK','gg1829sk-3435431','889652525747-cat-xl_c_ffffff-684943-fffffd','gg1829sk-brown-front-v1.png','gg1829sk-brown-side-v1.png',{ss:1.088,center:1,bend:.014,tuck:2.4,depth:.8,at:.55,sl:'gg1829sk-brown-sideL-v1.png'}],
+ ['Gucci','GG2152S','gg2152s-3435434','889652634692-cat-xl_c_ffffff-704c46-fffffd','gg2152s-front-v4.png','gg2152s-side-v3.png',{depth:.65,at:.5,sl:'gg2152s-sideL-v3.png'}],
  ['Gucci','GG2050S','gg2050s-3435432','889652626253-cat-xl_c_ffffff-fffffd-66666b'],
- ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d','gg2051s-001-front-v1.png','gg2051s-001-side-v1.png',{center:1,sy:0}],
- ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd','gg1703s-004-front-v4.png','gg1703s-004-side-v4.png'],
+ ['Gucci','GG2051S','gg2051s-3435433','889652626314-cat-xl_c_ffffff-fffffd-4d4d4d','gg2051s-001-front-v1.png','gg2051s-001-side-v1.png',{center:1,sy:0,depth:.2,at:.15,sl:'gg2051s-001-sideL-v1.png'}],
+ ['Gucci','GG1703S','gg1703s-3435429','889652498492-cat-xl_c_ffffff-64513a-fffffd','gg1703s-004-front-v4.png','gg1703s-004-side-v4.png',{depth:.22,at:.15,sl:'gg1703s-004-sideL-v4.png'}],
  ['Maui Jim','MJ0668S','mj0668s-3435379','603429079833-cat-xl_c_ffffff-6c6c6c-8b8b8b'],
  ['Maui Jim','MJ0674S','mj0674s-3435380','603429080075-cat-xl_c_ffffff-fffffd-666666'],
  ['Maui Jim','MJ0675S','mj0675s-3435381','603429080129-cat-xl_c_ffffff-fffffd-806a56'],
@@ -115,7 +115,7 @@ function load(src){return new Promise((res,rej)=>{const i=new Image();i.crossOri
 async function prep(f){
   if(f.ready)return f.ready;
   f.ready=(async()=>{
-    if(f.url){const pim=await load(f.url);const pc=document.createElement('canvas');pc.width=pim.naturalWidth;pc.height=pim.naturalHeight;pc.getContext('2d').drawImage(pim,0,0);f.cv=pc;if(f.side){const sim=await load(f.side);const sc=document.createElement('canvas');sc.width=sim.naturalWidth;sc.height=sim.naturalHeight;sc.getContext('2d').drawImage(sim,0,0);f.sv=sc}return pc}
+    if(f.url){const pim=await load(f.url);const pc=document.createElement('canvas');pc.width=pim.naturalWidth;pc.height=pim.naturalHeight;pc.getContext('2d').drawImage(pim,0,0);f.cv=pc;if(f.side){const sim=await load(f.side);const sc=document.createElement('canvas');sc.width=sim.naturalWidth;sc.height=sim.naturalHeight;sc.getContext('2d').drawImage(sim,0,0);f.sv=sc;if(f.o&&f.o.sl){try{const lim=await load(f.o.sl);const lc=document.createElement('canvas');lc.width=lim.naturalWidth;lc.height=lim.naturalHeight;lc.getContext('2d').drawImage(lim,0,0);f.svL=lc}catch(e){}}}return pc}
     const im=await load(IMG+f.file+'.webp');
     const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;
     const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);
@@ -237,6 +237,17 @@ async function loadThree(){
   try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js')}catch(e){console.log('THREEFAIL',e&&e.message);THREE=null}
   return THREE;
 }
+function maskCanvas(c,lo,hi){const m=document.createElement('canvas');m.width=c.width;m.height=c.height;const x=m.getContext('2d');x.drawImage(c,0,0);const d=x.getImageData(0,0,m.width,m.height),p=d.data;for(let i=3;i<p.length;i+=4){let a=(p[i]/255-lo)/(hi-lo);a=a<0?0:a>1?1:a;p[i]=a*255}x.putImageData(d,0,0);return m}
+function bodyCanvas(c){ // same arm without the raised gold logo, for the inner layers of the arm
+  const w=c.width,h=c.height,m=document.createElement('canvas');m.width=w;m.height=h;const x=m.getContext('2d');x.drawImage(c,0,0);
+  const d=x.getImageData(0,0,w,h),p=d.data,gold=new Uint8Array(w*h);let ng=0,no=0;
+  for(let i=0;i<w*h;i++){const r=p[i*4],g=p[i*4+1],b=p[i*4+2],a=p[i*4+3];if(a>200){no++;if(r>140&&r>g*1.08&&g>b*1.35){gold[i]=1;ng++}}}
+  if(ng/Math.max(1,no)>.4||!ng)return c;
+  const cs=new Float64Array(w*3),cn=new Float64Array(w);let gr=0,gg=0,gb=0,gn=0;
+  for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){const i=y*w+xx;if(p[i*4+3]>200&&!gold[i]){cs[xx*3]+=p[i*4];cs[xx*3+1]+=p[i*4+1];cs[xx*3+2]+=p[i*4+2];cn[xx]++;gr+=p[i*4];gg+=p[i*4+1];gb+=p[i*4+2];gn++}}
+  for(let y=0;y<h;y++)for(let xx=0;xx<w;xx++){const i=y*w+xx;if(gold[i]){let n=0,r=0,g=0,b=0;for(let k=-12;k<=12;k++){const X=xx+k;if(X>=0&&X<w&&cn[X]){n+=cn[X];r+=cs[X*3];g+=cs[X*3+1];b+=cs[X*3+2]}}if(!n){n=gn;r=gr;g=gg;b=gb}p[i*4]=r/n;p[i*4+1]=g/n;p[i*4+2]=b/n}}
+  x.putImageData(d,0,0);return m}
+function wallCanvas(c,mask,px){const w=document.createElement('canvas');w.width=c.width;w.height=c.height;const x=w.getContext('2d');x.filter='blur('+px+'px)';x.drawImage(c,0,0);x.filter='none';x.globalCompositeOperation='destination-in';x.drawImage(mask,0,0);return w}
 function texOf(c){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.needsUpdate=true;return t}
 function buildRig(f){
   if(rig){root.remove(rig);rig.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(o.material.map)o.material.map.dispose();o.material.dispose()}})}
@@ -247,16 +258,29 @@ function buildRig(f){
   const fg=new THREE.PlaneGeometry(WG,fh,24,1);const pa=fg.attributes.position;
   for(let i=0;i<pa.count;i++){const x=pa.getX(i);pa.setZ(i,-(f.o&&f.o.bend!=null?f.o.bend:BEND)*x*x)}
   fg.computeBoundingSphere();
-  const front=new THREE.Mesh(fg,mat(f.cv));front.renderOrder=3;g.add(front);
+  const O=f.o||{},depth=O.depth||0,at=O.at||0;
+  const sol=(c,sh)=>new THREE.MeshBasicMaterial({map:texOf(c),color:new THREE.Color(sh,sh,sh),alphaTest:.5,alphaToCoverage:true,side:THREE.DoubleSide});
+  if(depth>0){
+    // real thickness: the lens sits recessed, the frame is a stack of layers from the front face to the back
+    const lens=new THREE.Mesh(fg,mat(f.cv));lens.position.z=-depth*.42;lens.renderOrder=3;g.add(lens);
+    const fc=maskCanvas(f.cv,.95,.99),wc=wallCanvas(fc,fc,Math.max(3,f.cv.width/130)),K=Math.max(3,Math.round(depth/.025));
+    for(let k=0;k<K;k++){const m=new THREE.Mesh(fg,sol(k?wc:fc,1-.35*(k/(K-1))));m.position.z=-depth*k/(K-1);g.add(m)}
+  }else{const front=new THREE.Mesh(fg,mat(f.cv));front.renderOrder=3;g.add(front)}
   if(f.sv){
     const o=f.o||{},ss=o.ss||1,aw=WG*ss*f.sv.width/f.cv.width,ah=WG*ss*f.sv.height/f.cv.width,TK=o.tuck!=null?o.tuck:TUCK;
-    const am=mat(f.sv);
+    const amR=mat(f.sv),amL=mat(f.svL||f.sv);
+    const bodyR=at>0?bodyCanvas(f.sv):null,bodyL=at>0?bodyCanvas(f.svL||f.sv):null;
+    const mkR=at>0?maskCanvas(bodyR,.95,.99):null,mkL=at>0?maskCanvas(bodyL,.95,.99):null;
+    const maskR=at>0?wallCanvas(mkR,mkR,2):null,maskL=at>0?wallCanvas(mkL,mkL,2):null;
     for(const sx of [1,-1]){
       // the arm tucks inward toward the head over its last part, so its tip goes in behind the ear
       const ag=new THREE.PlaneGeometry(aw,ah,60,1);const ap=ag.attributes.position;
-      for(let i=0;i<ap.count;i++){const u=(ap.getX(i)+aw/2)/aw;let t=Math.max(0,Math.min(1,(u-.74)/.26));t=t*t*(3-2*t);ap.setZ(i,-sx*TK*t)}
-      const a=new THREE.Mesh(ag,am);a.rotation.y=Math.PI/2;
-      a.position.set(sx*(WG/2-.3),(o.center?(o.sy||0):fh/2-ah/2),-.25-aw/2);a.renderOrder=2;g.add(a);
+      const LA=sx<0&&!!f.svL,ROT=LA?-Math.PI/2:Math.PI/2; // left arm: its own mirrored picture, facing outward, so the Gucci lettering reads correctly
+      for(let i=0;i<ap.count;i++){let u=(ap.getX(i)+aw/2)/aw;if(LA)u=1-u;let t=Math.max(0,Math.min(1,(u-.74)/.26));t=t*t*(3-2*t);ap.setZ(i,(LA?sx:-sx)*TK*t)}
+      const ay=(o.center?(o.sy||0):fh/2-ah/2),ax=sx*(WG/2-.3),az=-(depth>0?depth*.9:.25)-aw/2;
+      const a=new THREE.Mesh(ag,sx>0?amR:amL);a.rotation.y=ROT;a.position.set(ax,ay,az);a.renderOrder=2;g.add(a);
+      if(at>0){const K=Math.max(3,Math.round(at/.025)),mk=sx>0?maskR:maskL;
+        for(let k=1;k<K;k++){const m=new THREE.Mesh(ag,sol(mk,1-.4*(k/(K-1))));m.rotation.y=ROT;m.position.set(ax-sx*at*k/(K-1),ay,az);g.add(m)}}
     }
   }
   root.add(rig);
